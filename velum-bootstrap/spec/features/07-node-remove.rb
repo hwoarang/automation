@@ -16,8 +16,8 @@ feature "Remove a Node" do
   end
   let(:node_number_removable) do
     removable = node_number
-    removable -= 1 if master_node_removable?
-    removable -= 1 if worker_node_removable?
+    removable -= 1 unless master_node_removable?
+    removable -= 1 unless worker_node_removable?
     removable
   end
 
