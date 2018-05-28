@@ -59,7 +59,8 @@ class TestKubernetesMaster(object):
             host.file("/tmp/cluster_info/nodes.json").content_string
         )
 
-        env_file = os.environ['ENVIRONMENT_JSON']
+        env_file = os.environ.get('ENVIRONMENT_JSON', '../caasp-kvm/environment.json')
+
         with open(env_file, 'r') as f:
             env = json.load(f)
 
