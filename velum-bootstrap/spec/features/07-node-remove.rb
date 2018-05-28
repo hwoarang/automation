@@ -46,7 +46,7 @@ feature "Remove a Node" do
 
     puts ">>> Click to remove a node"
     with_screenshot(name: :node_removal) do
-      node_link = find(".remove-node-link", match: :first)
+      node_link = find(".remove-node-link", match: :first).first(:xpath,".//..")
       # mark node as inactive in environment.json
       environment(
         action: :update,
