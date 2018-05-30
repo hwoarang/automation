@@ -34,13 +34,13 @@ feature "Remove a Node" do
 
     puts ">>> Click to remove a node"
     with_screenshot(name: :node_removal) do
-      node_link = find(".remove-node-link", match: :first).first(:xpath,".//..")
       # mark node as inactive in environment.json
+      node_to_remove = find(".remove-node-link", match: :first)
       environment(
         action: :update,
-        body: set_minion_status(node_link["data-id"], "removed")
+        body:   set_minion_status(node_to_remove.first(:xpath, ".//..")["data-id"], "removed")
       )
-      node_link.click
+      node_to_remove.click
     end
 
     if page.has_content?("Unsupported cluster topology", wait: 5)
@@ -69,11 +69,7 @@ feature "Remove a Node" do
     puts ">>> Checking if node removal orchestration succeeded"
     with_screenshot(name: :node_removal_orchestration_succeeded) do
       within(".nodes-container") do
-<<<<<<< HEAD
-        expect(page).to have_css(".fa-check-circle-o", count: node_number-1, wait: 5)
-=======
         expect(page).to have_css(".fa-check-circle-o", count: node_number, wait: 5)
->>>>>>> 0692071... make node_number global to avoid DRY
       end
       expect(page).not_to have_text("Removal Failed", wait: 5)
     end
