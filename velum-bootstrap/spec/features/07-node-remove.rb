@@ -2,20 +2,10 @@ require "spec_helper"
 require "yaml"
 
 feature "Remove a Node" do
-  let(:master_node_removable?) do
-    environment["minions"].count { |element| element["role"] == "master" }.tap do |count|
-      !count.zero? && count != 1
-    end
-  end
-  let(:worker_node_removable?) do
-    environment["minions"].count { |element| element["role"] == "worker" }.tap do |count|
-      !count.zero? && count != 1
-    end
-  end
   let(:node_number_removable) do
     removable = node_number
-    removable -= 1 unless master_node_removable?
-    removable -= 1 unless worker_node_removable?
+    removable -= master_node_number unless node_removable?(role: "master")
+    removable -= worker_node_number unless node_removable?(role: "worker")
     removable
   end
 

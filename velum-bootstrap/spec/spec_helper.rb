@@ -50,6 +50,19 @@ def node_number
   environment["minions"].count { |element| element["role"] != "admin" && element["status"] != "removed" }
 end
 
+def master_node_number
+  environment["minions"].count { |element| element["role"] == "master" && element["status"] != "removed" }
+end
+
+def worker_node_number
+  environment["minions"].count { |element| element["role"] == "worker" && element["status"] != "removed" }
+end
+
+def node_removable?(role: "master")
+  cnt = environment["minions"].count { |element| element["role"] == role && element["status"] != "removed" }
+  !cnt.zero? && cnt != 1
+end
+
 Capybara.register_driver :poltergeist do |app|
   options = {
     timeout:           180,
