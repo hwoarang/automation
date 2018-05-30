@@ -46,6 +46,10 @@ def admin_minion
   environment["minions"].detect { |m| m["role"] == "admin" }
 end
 
+def node_number
+  environment["minions"].count { |element| element["role"] != "admin" && element["status"] != "removed" }
+end
+
 Capybara.register_driver :poltergeist do |app|
   options = {
     timeout:           180,

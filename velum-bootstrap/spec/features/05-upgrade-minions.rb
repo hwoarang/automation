@@ -2,8 +2,6 @@ require "spec_helper"
 require 'yaml'
 
 feature "update Admin Node" do
-
-  let(:node_number) { environment["minions"].count { |element| element["role"] != "admin" } }
   let(:hostnames) { environment["minions"].map { |m| m["fqdn"] if m["role"] != "admin" }.compact }
 
   before(:each) do
