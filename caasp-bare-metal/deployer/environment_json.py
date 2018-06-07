@@ -1,10 +1,10 @@
 
 # Create environment.json file - see environment.json.example
 
-import os
-
-import logging
+from collections import Counter
 import json
+import logging
+import os
 
 log = logging.getLogger(__name__)
 
@@ -27,8 +27,22 @@ def create_environment_json(admin_host_ipaddr, available_hosts):
         "minions": []
     }
     # FIXME: this is picking a macaddr    master_ipaddr = available_hosts[1][2]
-    for idx, minion in enumerate(available_hosts):
+    indexes = Counter()
+    for cnt, minion in enumerate(available_hosts):
         name, hw_serial, macaddr, ipaddr, machine_id = minion
+        if cnt == 0:
+            role = "admin"
+        elif cnt == 1:
+            role = "master"
+            # FIXME: This will fail for multi-master, this needs to be a round robin DNS record, or
+            # a load balancer address - or at the least - a DNS name aimed at one of the masters and
+            # registered in /etc/hosts on any machine who needs to reach the cluster.
+            d["kubernetesExternalHost"] = ipaddr
+        else:
+            role = "worker"
+            # unneded
+            # d["minions"][-1]["proxyCommand"] = "ssh root@{} -W %h:%p".format(master_ipaddr)
+
         d["minions"].append({
            "minionId" : machine_id,
            "index" : str(indexes[role]),
@@ -38,20 +52,11 @@ def create_environment_json(admin_host_ipaddr, available_hosts):
               "publicIpv4" : ipaddr,
            },
            "status" : "unused",
+           "role": role,
         })
+        # count up index for each role
+        indexes.update((role,))
 
-        if idx == 0:
-            d["minions"][-1]["role"] = "admin"
-        elif idx == 1:
-            d["minions"][-1]["role"] = "master"
-            # TODO: This will fail for multi-master, this needs to be a round robin DNS record, or
-            # a load balancer address - or at the least - a DNS name aimed at one of the masters and
-            # registered in /etc/hosts on any machine who needs to reach the cluster.
-            d["kubernetesExternalHost"] = ipaddr
-        else:
-            d["minions"][-1]["role"] = "worker"
-            # unneded
-            # d["minions"][-1]["proxyCommand"] = "ssh root@{} -W %h:%p".format(master_ipaddr)
 
     fn = os.path.abspath('environment.json')
     with open(fn, 'w') as f:
