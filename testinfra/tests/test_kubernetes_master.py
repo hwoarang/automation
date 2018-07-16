@@ -19,7 +19,7 @@ import json
 
 @pytest.mark.master
 class TestKubernetesMaster(object):
-
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
@@ -34,6 +34,7 @@ class TestKubernetesMaster(object):
         host_service = host.service(service)
         assert host_service.is_running
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
@@ -47,9 +48,11 @@ class TestKubernetesMaster(object):
         host_service = host.service(service)
         assert host_service.is_enabled
 
+    @pytest.mark.bootstrapped
     def test_salt_role(self, host):
         assert 'kube-master' in host.salt("grains.get", "roles")
 
+    @pytest.mark.bootstrapped
     def test_kubernetes_cluster(self, host):
         host.run(
             "kubectl cluster-info dump --output-directory=/tmp/cluster_info"
@@ -72,6 +75,7 @@ class TestKubernetesMaster(object):
                 if item["Type"] is "Ready":
                     assert bool(item["Status"])
 
+    @pytest.mark.bootstrapped
     def test_salt_id(self, host):
         machine_id = host.file('/etc/machine-id').content_string.rstrip()
         assert machine_id in host.salt("grains.get", "id")

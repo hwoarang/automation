@@ -18,6 +18,7 @@ import pytest
 @pytest.mark.worker
 class TestKubernetesWorker(object):
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
         "containerd",
@@ -29,6 +30,7 @@ class TestKubernetesWorker(object):
         host_service = host.service(service)
         assert host_service.is_running
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
         "container-feeder",
@@ -39,6 +41,7 @@ class TestKubernetesWorker(object):
         host_service = host.service(service)
         assert host_service.is_enabled
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
@@ -48,6 +51,7 @@ class TestKubernetesWorker(object):
         host_service = host.service(service)
         assert host_service.is_running == False
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
@@ -57,9 +61,11 @@ class TestKubernetesWorker(object):
         host_service = host.service(service)
         assert host_service.is_enabled == False
 
+    @pytest.mark.bootstrapped
     def test_salt_role(self, host):
         assert 'kube-minion' in host.salt("grains.get", "roles")
 
+    @pytest.mark.bootstrapped
     def test_salt_id(self, host):
         machine_id = host.file('/etc/machine-id').content_string.rstrip()
         assert machine_id in host.salt("grains.get", "id")
@@ -81,6 +87,7 @@ class TestKubernetesWorker(object):
         else:
             return True
 
+    @pytest.mark.bootstrapped
     def test_etcd_aliveness(self, host):
         # TODO: Remove the machine_id compatibility once we remove our
         #       generated hostnames.

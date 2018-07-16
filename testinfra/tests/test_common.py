@@ -16,7 +16,16 @@ import pytest
 
 @pytest.mark.common
 class TestCommon(object):
-    """docstring for TestBaseEnv"""
+    @pytest.mark.removed
+    @pytest.mark.unused
+    def test_dummy_test(self, host):
+        # A dummy test that does nothing, but lets CI pass without yet having any
+        # removed/unused tests as a testinfra.xml will  be generated with at least
+        # one test. Remove once we have at least 1 test for each role+status
+        # combination.
+        pass
+
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "salt-minion"
     ])
@@ -24,6 +33,7 @@ class TestCommon(object):
         host_service = host.service(service)
         assert host_service.is_running
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "salt-minion"
     ])
@@ -31,5 +41,6 @@ class TestCommon(object):
         host_service = host.service(service)
         assert host_service.is_enabled
 
-    def test_bootstrap_grain(self, host):
+    @pytest.mark.bootstrapped
+    def test_bootstrap_grain_bootstrapped(self, host):
         assert host.salt("grains.get", "bootstrap_complete")

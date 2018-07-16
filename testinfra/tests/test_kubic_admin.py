@@ -19,6 +19,7 @@ import pytest
 class TestKubicAdmin(object):
     """docstring for TestBaseEnv"""
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
         "containerd",
@@ -29,6 +30,7 @@ class TestKubicAdmin(object):
         host_service = host.service(service)
         assert host_service.is_running
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
         "container-feeder",
@@ -38,9 +40,11 @@ class TestKubicAdmin(object):
         host_service = host.service(service)
         assert host_service.is_enabled
 
+    @pytest.mark.bootstrapped
     def test_salt_role(self, host):
         assert 'admin' in host.salt("grains.get", "roles")
 
+    @pytest.mark.bootstrapped
     def test_etcd_aliveness(self, host):
         cmd = "etcdctl cluster-health"
         health = host.run_expect([0], cmd)
