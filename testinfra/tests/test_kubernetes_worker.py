@@ -14,13 +14,12 @@
 
 import pytest
 
+from .utils import TestUtils
 
 @pytest.mark.worker
 class TestKubernetesWorker(object):
-
     @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
-        "docker",
         "containerd",
         "container-feeder",
         "kubelet",
@@ -31,8 +30,14 @@ class TestKubernetesWorker(object):
         assert host_service.is_running
 
     @pytest.mark.bootstrapped
+    @pytest.mark.skipif(
+        TestUtils.feature_matches('cri', {'implementation': 'docker'}),
+        reason="CRI is not Docker")
+    def test_docker_service_running(self, host, service):
+        assert host.service('docker').is_running
+
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
-        "docker",
         "container-feeder",
         "kubelet",
         "kube-proxy"
@@ -40,6 +45,13 @@ class TestKubernetesWorker(object):
     def test_services_enabled(self, host, service):
         host_service = host.service(service)
         assert host_service.is_enabled
+
+    @pytest.mark.bootstrapped
+    @pytest.mark.skipif(
+        TestUtils.feature_matches('cri', {'implementation': 'docker'}),
+        reason="CRI is not Docker")
+    def test_docker_service_enabled(self, host, service):
+        assert host.service('docker').is_enabled
 
     @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [

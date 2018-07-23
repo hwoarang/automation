@@ -16,6 +16,7 @@ import os
 import pytest
 import json
 
+from .utils import TestUtils
 
 @pytest.mark.master
 class TestKubernetesMaster(object):
@@ -24,7 +25,6 @@ class TestKubernetesMaster(object):
         "kube-apiserver",
         "kube-controller-manager",
         "kube-scheduler",
-        "docker",
         "containerd",
         "container-feeder",
         "kubelet",
@@ -35,11 +35,17 @@ class TestKubernetesMaster(object):
         assert host_service.is_running
 
     @pytest.mark.bootstrapped
+    @pytest.mark.skipif(
+        TestUtils.feature_matches('cri', {'implementation': 'docker'}),
+        reason="CRI is not Docker")
+    def test_docker_service_running(self, host, service):
+        assert host.service('docker').is_running
+
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
         "kube-scheduler",
-        "docker",
         "container-feeder",
         "kubelet",
         "kube-proxy"
@@ -47,6 +53,13 @@ class TestKubernetesMaster(object):
     def test_services_enabled(self, host, service):
         host_service = host.service(service)
         assert host_service.is_enabled
+
+    @pytest.mark.bootstrapped
+    @pytest.mark.skipif(
+        TestUtils.feature_matches('cri', {'implementation': 'docker'}),
+        reason="CRI is not Docker")
+    def test_docker_service_enabled(self, host, service):
+        assert host.service('docker').is_enabled
 
     @pytest.mark.bootstrapped
     def test_salt_role(self, host):
@@ -62,11 +75,7 @@ class TestKubernetesMaster(object):
             host.file("/tmp/cluster_info/nodes.json").content_string
         )
 
-        env_file = os.environ.get('ENVIRONMENT_JSON', '../caasp-kvm/environment.json')
-
-        with open(env_file, 'r') as f:
-            env = json.load(f)
-
+        env = TestUtils.environment()
         assert (len(nodes["Items"]) == sum(1 for i in env["minions"] if i["role"] != "admin" and i["status"] == "bootstrapped"))
 
         # Check all nodes are marked as "Ready" in k8s
