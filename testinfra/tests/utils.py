@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import json
+
 class TestUtils(object):
 
     @staticmethod
-    def environment(cls):
+    def environment():
         env_file = os.environ.get('ENVIRONMENT_JSON', '../caasp-kvm/environment.json')
 
         with open(env_file, 'r') as f:
             env = json.load(f)
             return env
 
-    @staticmethod
+    @classmethod
     def feature_matches(cls, feature, value):
         feature_data = cls.environment().get("features", {}).get(feature, {})
         
