@@ -53,8 +53,10 @@ run_tests() {
     # Increase timeout. The default timeout is not enought when running in our test cluster
     sed -e "s/\"timeoutseconds\": 5400/\"timeoutseconds\": 14400/g" -i sonobuoy-conformance.yaml
     KUBECONFIG=$KUBECONFIG kubectl apply -f sonobuoy-conformance.yaml
-    while ! KUBECONFIG=$KUBECONFIG kubectl logs -n heptio-sonobuoy sonobuoy | grep "sonobuoy is now blocking"; do
+    n=60
+    while test $n -gt 0 && ! KUBECONFIG=$KUBECONFIG kubectl logs -n heptio-sonobuoy sonobuoy | grep "sonobuoy is now blocking"; do
         sleep 120
+        n=$(($n - 1))
     done
 
     # Create the artifacts path
