@@ -12,7 +12,7 @@ import sys
 import urlparse
 from HTMLParser import HTMLParser
 
-KVM_REGEX = '.*KVM.*x86_64-.*\.qcow2$'
+KVM_REGEX = '.*kvm-and-xen.*\.qcow2$'  # temporary hack
 KVM_KUBIC_REGEX = '.*x86_64-.*Stack-hardware-x86_64.*\.qcow2$'
 DOCKER_REGEX = '%(docker_image)s.*x86_64-.*\.tar\.xz$'
 OPENSTACK_REGEX = '.*OpenStack-Cloud.*x86_64-.*\.qcow2$'
@@ -252,7 +252,7 @@ def get_channel_url(args):
     if args.type == "docker":
         base_url += 'images_container_base'
     elif args.type in ["kvm", "openstack"]:
-        base_url += 'images'
+        base_url += 'images-sle15'   # temporary hack
     elif args.type == "iso":
         base_url += 'images/iso'
     else:
@@ -264,13 +264,17 @@ def get_channel_url(args):
       'https': args.proxy,
     }
 
+    print(" >> Fetching {}".format(base_url))
     r = requests.get(base_url, proxies=proxies)
     parser.feed(r.text)
 
     image = parser.get_image()
 
     if image is None:
-        print(" >> No matching images found")
+        print(" >> No matching images found using regexp: {}".format(parser.regexp))
+        raise Exception("No matching image found")
+
+    print(" >> Found image {}".format(image))
 
     return "%(base)s/%(image)s" % {
         "base": base_url,
