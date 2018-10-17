@@ -25,7 +25,6 @@ class TestKubernetesMaster(object):
         "kube-apiserver",
         "kube-controller-manager",
         "kube-scheduler",
-        "containerd",
         "container-feeder",
         "kubelet",
         "kube-proxy"

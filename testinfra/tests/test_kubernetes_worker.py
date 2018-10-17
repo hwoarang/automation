@@ -20,7 +20,6 @@ from .utils import TestUtils
 class TestKubernetesWorker(object):
     @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
-        "containerd",
         "container-feeder",
         "kubelet",
         "kube-proxy"

@@ -22,7 +22,6 @@ class TestKubicAdmin(object):
     @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
-        "containerd",
         "container-feeder",
         "kubelet",
     ])
