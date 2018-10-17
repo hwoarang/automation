@@ -2,6 +2,7 @@
 testinfra==1.8.0
 pytest==3.2.2
 paramiko==2.3.3
+pyyaml==3.13
 
 # Transitive Dependencies
 cffi==1.11.0

@@ -14,6 +14,7 @@
 
 import os
 import json
+import yaml
 
 class TestUtils(object):
 
@@ -28,5 +29,21 @@ class TestUtils(object):
     @classmethod
     def feature_matches(cls, feature, value):
         feature_data = cls.environment().get("features", {}).get(feature, {})
-        
+
         return set(feature_data.items()).issubset(set(value.items()))
+
+    @staticmethod
+    def load_registry_configuration(host):
+        try:
+            registry_config = host.file(
+                '/usr/share/caasp-container-manifests/config/registry/registry-config.yaml'
+            ).content_string
+        # unfortunately if the file doesn't exist it will throw a RuntimeError
+        # instead of an IOError
+        except RuntimeError:
+            return {
+                "use_registry": False,
+                "host": "",
+                "namespace": ""
+            }
+        return yaml.safe_load(registry_config)

@@ -20,13 +20,23 @@ from .utils import TestUtils
 class TestKubernetesWorker(object):
     @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
-        "container-feeder",
         "kubelet",
         "kube-proxy"
     ])
     def test_services_running(self, host, service):
         host_service = host.service(service)
         assert host_service.is_running
+
+    @pytest.mark.bootstrapped
+    @pytest.mark.parametrize("service", [
+        "container-feeder",
+    ])
+    def test_service_non_registry(self, host, service):
+        """Test service is only running when not using registry."""
+        registry_conf = TestUtils.load_registry_configuration(host)
+        if not registry_conf['use_registry']:
+            host_service = host.service(service)
+            assert host_service.is_running
 
     @pytest.mark.bootstrapped
     @pytest.mark.skipif(
@@ -37,7 +47,6 @@ class TestKubernetesWorker(object):
 
     @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
-        "container-feeder",
         "kubelet",
         "kube-proxy"
     ])
