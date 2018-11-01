@@ -238,7 +238,7 @@ export ENVIRONMENT="$DIR/caasp-kvm/environment.json"
 
 # Core methods
 setup() {
-  log "Installing CaaSP Development Environment Requiemnts"
+  log "Installing CaaSP Development Environment Requirements"
   sudo zypper in --no-confirm --auto-agree-with-licenses $EARLY_DIST_PACKAGES
 
   local dist=$(lsb-release -sd | tr -d '"' | tr " " "_")
