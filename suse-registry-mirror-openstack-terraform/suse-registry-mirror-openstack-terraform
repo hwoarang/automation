@@ -25,7 +25,8 @@ USAGE:
   2. Edit openstack.tfvars file and provide following options
 
   * image_name - SLES JEOS OpenStack Image Name
-  * network_name - OpenStack Private Network
+  * internal_net - OpenStack Private Network Name
+  * external_net - OpenStack Public Network Name
   * admin_size - SLES JEOS OpenStack Flavour
   * sles_base - sles base repo
   * sles_update - sles update repo
