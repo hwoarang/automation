@@ -248,6 +248,13 @@ resource "libvirt_domain" "admin" {
     readonly = true
   }
 
+  # hide the outdated RMS/SMT mirror warning in the devenv
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'tx_update_migration_mirror_synced: true' >> /etc/salt/grains",
+    ]
+  }
+
   provisioner "remote-exec" {
     inline = [
       "while [[ ! -f /var/run/docker.pid ]]; do echo waiting for docker to start; sleep 1; done",
@@ -356,6 +363,15 @@ resource "libvirt_domain" "master" {
     user     = "root"
     password = "linux"
   }
+
+<% if not ENV['VANILLA'] == "true" -%>
+  # hide the outdated RMS/SMT mirror warning in the devenv
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'tx_update_migration_mirror_synced: true' >> /etc/salt/grains",
+    ]
+  }
+<% end -%>
 
   # This ensures the VM is booted and SSH'able
   provisioner "remote-exec" {
@@ -477,6 +493,15 @@ disk {
     user     = "root"
     password = "linux"
   }
+
+<% if not ENV['VANILLA'] == "true" -%>
+  # hide the outdated RMS/SMT mirror warning in the devenv
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'tx_update_migration_mirror_synced: true' >> /etc/salt/grains",
+    ]
+  }
+<% end -%>
 
   # This ensures the VM is booted and SSH'able
   provisioner "remote-exec" {
