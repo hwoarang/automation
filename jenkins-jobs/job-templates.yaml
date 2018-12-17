@@ -72,7 +72,7 @@
 - job-template:
     name: '{name}.codenarc'
     project-type: multibranch
-    disabled: '{obj:disabled}'
+    disabled: true
     periodic-folder-trigger: 1h
     number-to-keep: 30
     days-to-keep: 30
