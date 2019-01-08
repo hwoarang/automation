@@ -1,9 +1,3 @@
-variable "auth_url" {}
-variable "domain_name" {}
-variable "region_name" {}
-variable "project_name" {}
-variable "user_name" {}
-variable "password" {}
 variable "image_name" {}
 variable "internal_net" {}
 variable "external_net" {}
@@ -14,16 +8,7 @@ variable "worker_size" {}
 variable "workers" {}
 variable "dnsdomain" {}
 variable "dnsentry" {}
-variable "identifier" {}
-
-provider "openstack" {
-  domain_name = "${var.domain_name}"
-  tenant_name = "${var.project_name}"
-  user_name   = "${var.user_name}"
-  password    = "${var.password}"
-  auth_url    = "${var.auth_url}"
-  insecure    = "true"
-}
+variable "stack_name" {}
 
 resource "openstack_dns_zone_v2" "caasp" {
   count       = "${var.dnsentry ? 1 : 0}"
@@ -64,15 +49,31 @@ data "template_file" "cloud-init" {
   }
 }
 
+resource "tls_private_key" "id_caasp" {
+  algorithm   = "RSA"
+  rsa_bits    = "2048"
+
+  provisioner "local-exec" {
+    command = "if [ ! -d ./ssh ]; then mkdir -p ./ssh; fi"
+  }
+
+  provisioner "local-exec" {
+    command = "if [ -f ./ssh/id_caasp ]; then cp -f ./ssh/id_caasp ./ssh/id_caasp.backup; fi"
+  }
+
+  provisioner "local-exec" {
+    command = "echo \"${tls_private_key.id_caasp.private_key_pem}\" > ./ssh/id_caasp && chmod 0600 ./ssh/id_caasp"
+  }
+}
+
 resource "openstack_compute_keypair_v2" "keypair" {
-  name       = "caasp-ssh-${var.identifier}"
-  region     = "${var.region_name}"
-  public_key = "${file("ssh/id_caasp.pub")}"
+  depends_on = ["tls_private_key.id_caasp"]
+  name       = "caasp-ssh-${var.stack_name}"
+  public_key = "${tls_private_key.id_caasp.public_key_openssh}"
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_base" {
-  name        = "caasp-base-${var.identifier}"
-  region      = "${var.region_name}"
+  name        = "caasp-base-${var.stack_name}"
   description = "Basic security group for CaaSP"
 
   rule {
@@ -105,8 +106,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_admin" {
-  name        = "caasp-admin-${var.identifier}"
-  region      = "${var.region_name}"
+  name        = "caasp-admin-${var.stack_name}"
   description = "CaaSP security group for admin"
 
   rule {
@@ -139,8 +139,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_admin" {
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_master" {
-  name        = "caasp-master-${var.identifier}"
-  region      = "${var.region_name}"
+  name        = "caasp-master-${var.stack_name}"
   description = "CaaSP security group for masters"
 
   rule {
@@ -180,8 +179,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_worker" {
-  name        = "caasp-worker-${var.identifier}"
-  region      = "${var.region_name}"
+  name        = "caasp-worker-${var.stack_name}"
   description = "CaaSP security group for workers"
 
   rule {
@@ -250,7 +248,6 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker" {
 
 resource "openstack_compute_instance_v2" "admin" {
   name       = "caasp-admin"
-  region     = "${var.region_name}"
   image_name = "${var.image_name}"
 
   connection {
@@ -258,7 +255,7 @@ resource "openstack_compute_instance_v2" "admin" {
   }
 
   flavor_name = "${var.admin_size}"
-  key_pair    = "caasp-ssh-${var.identifier}"
+  key_pair    = "caasp-ssh-${var.stack_name}"
 
   network {
     name = "${var.internal_net}"
@@ -284,7 +281,6 @@ resource "openstack_compute_floatingip_associate_v2" "admin_ext_ip" {
 resource "openstack_compute_instance_v2" "master" {
   count      = "${var.masters}"
   name       = "caasp-master${count.index}"
-  region     = "${var.region_name}"
   image_name = "${var.image_name}"
 
   connection {
@@ -292,7 +288,7 @@ resource "openstack_compute_instance_v2" "master" {
   }
 
   flavor_name = "${var.master_size}"
-  key_pair    = "caasp-ssh-${var.identifier}"
+  key_pair    = "caasp-ssh-${var.stack_name}"
 
   network {
     name = "${var.internal_net}"
@@ -320,7 +316,6 @@ resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
 resource "openstack_compute_instance_v2" "worker" {
   count      = "${var.workers}"
   name       = "caasp-worker${count.index}"
-  region     = "${var.region_name}"
   image_name = "${var.image_name}"
 
   connection {
@@ -328,7 +323,7 @@ resource "openstack_compute_instance_v2" "worker" {
   }
 
   flavor_name = "${var.worker_size}"
-  key_pair    = "caasp-ssh-${var.identifier}"
+  key_pair    = "caasp-ssh-${var.stack_name}"
 
   network {
     name = "${var.internal_net}"
