@@ -1,7 +1,9 @@
-# Kubic Project Automation
+# CaaS Platform Automation
 
 The repo houses various tools and automation scripts that are used by the
-Kubic team for dev/test/CI purposes.
+SUSE Kubic team for dev/test/CI purposes for the **SUSE CaaS Platform Product**.
+
+**NOTE: The tools in this repo should not be used on openSUSE Kubic**
 
 ## caasp-devenv
 
@@ -11,7 +13,7 @@ output.
 
 ## CaaSP KVM
 
-A tool to build a KVM based development cluster for CaaSP and Kubic.
+A tool to build a KVM based development cluster for CaaSP
 
 ## CaaSP OpenStack Heat
 
