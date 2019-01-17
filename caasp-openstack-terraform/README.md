@@ -21,17 +21,20 @@ After downloading OpenStack RC file, please source openrc.sh file which is expor
 #### Examples
 
 Deploy CaaSP on OpenStack
+
 ```
-./caasp-openstack apply
+terraform apply
 ```
 
 Refresh current deployment and update existing cluster after changing workers number
+
 ```
-./caasp-openstack plan
-./caasp-openstack apply
+terraform plan
+terraform apply
 ```
 
 Cleanup installation
+
 ```
-./caasp-openstack destroy
+terraform destroy
 ```
