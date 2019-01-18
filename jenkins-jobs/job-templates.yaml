@@ -14,7 +14,7 @@
           '': '{scm-id}'
           repo: '{name}'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
@@ -38,7 +38,7 @@
           '': '{scm-id}'
           repo: '{name}'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
@@ -61,7 +61,7 @@
           '': '{scm-id}'
           repo: '{name}'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
@@ -84,7 +84,7 @@
           '': '{scm-id}'
           repo: '{name}'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors

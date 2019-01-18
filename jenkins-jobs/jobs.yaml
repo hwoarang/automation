@@ -17,7 +17,7 @@
           '': 'a40a1e55-f6ee-4fd7-bab2-7e73fdf40422'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -36,7 +36,7 @@
           '': 'f1ae4e54-e153-4300-b140-1b3d61412308'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -55,7 +55,7 @@
           '': '33dd0793-b5f4-4fb2-8da7-d2041ce52aa1'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -74,7 +74,7 @@
           '': '4dc6d511-2364-4940-94e6-289a2e63d614'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -93,7 +93,7 @@
           '': '3a598a40-fac5-4140-889d-8856254d0515'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -112,7 +112,7 @@
           '': '5626bb33-c1ae-4f61-ae86-5174b84bdc49'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -131,7 +131,7 @@
           '': '6a976378-bc17-4bac-b0e4-0b00da8810e5'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -150,7 +150,7 @@
           '': '5e574374-3794-48ab-a535-0687f370eec2'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -169,7 +169,7 @@
           '': '484fc559-5340-4637-8146-fca673d5c161'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -188,7 +188,7 @@
           '': '48305b0c-6325-43f4-8372-38c348931da8'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -207,7 +207,7 @@
           '': '866a5b3f-2038-48d4-8789-39e8a28b922a'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: false
           discover-pr-origin: false
@@ -226,7 +226,7 @@
           '': '4a57f25e-325d-4a20-9443-28ea9bb56628'
           repo: 'automation'
           repo-owner: 'kubic-project'
-          credentials-id: 'github-token-caaspjenkins'
+          credentials-id: 'github-token'
           branch-discovery: no-pr
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
