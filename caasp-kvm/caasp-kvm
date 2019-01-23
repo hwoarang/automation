@@ -346,8 +346,7 @@ build() {
 
     log "Copying CaaSP Container Manifests"
     local injected="$(realpath injected-caasp-container-manifests)"
-    rm -rf $injected/*
-    cp -r $CAASP_MANIFESTS_DIR/* "$injected/"
+    rsync -ai --exclude '.**' --delete "$CAASP_MANIFESTS_DIR/" "${injected:?}/"
 
     log "Patching Container Manifests"
     $DIR/tools/fix-kubelet-manifest ${SLE15_MANIFEST_FLAG:-} ${KUBIC_MANIFEST_FLAG:-} -o $injected/manifests/public.yaml $injected/manifests/public.yaml
