@@ -1,9 +1,20 @@
 # CaaS Platform Automation
 
+[![Build Status Master branch](https://travis-ci.org/kubic-project/automation.svg?branch=master)](https://travis-ci.org/kubic-project/automation)
+
 The repo houses various tools and automation scripts that are used by the
 SUSE Kubic team for dev/test/CI purposes for the **SUSE CaaS Platform Product**.
 
 **NOTE: The tools in this repo should not be used on openSUSE Kubic**
+
+## Table of Content
+
+- [Deployement](#deploy-tools)
+- [Tests-and-scheduling-logic](#tests-and-scheduling-logic)
+- [Extra](#extra)
+
+___
+# Deploy tools
 
 ## caasp-devenv
 
@@ -29,6 +40,8 @@ large scale clusters for testing and validation.
 
 A tool to build a Bare Metal cluster. Acts as a client for the Bare Metal
 Manager service.
+___
+# Tests and scheduling logic
 
 ## Jenkins Pipelines
 
@@ -47,8 +60,10 @@ A set of tests to validate a CaaSP cluster has been successfully deployed
 
 Some scripting to walk through the Velum UI to bootstrap a cluster, primarily
 used within CI.
+___
+# Extra 
 
-# Development
+## Development
 
 Where possible, use Python, Ruby, Bash.
 

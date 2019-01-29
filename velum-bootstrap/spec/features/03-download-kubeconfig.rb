@@ -20,7 +20,8 @@ feature "Download Kubeconfig" do
       visit "/"
     end
 
-    expect(page).to have_text("You currently have no nodes to be accepted for bootstrapping", wait: 240)
+    expect(page).to have_text("You currently have no nodes to be accepted for bootstrapping",
+             wait: 240)
 
     puts ">>> User clicks to download kubeconfig"
     expect(page).to have_text("kubeconfig")
