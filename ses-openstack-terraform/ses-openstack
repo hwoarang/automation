@@ -25,7 +25,8 @@ USAGE:
   2. Edit openstack.tfvars file and provide following options
 
   * image_name - SLES OpenStack Image Name
-  * network_name - OpenStack Private Network
+  * internal_net - OpenStack Private Network Name
+  * external_net - OpenStack Public Network Name
   * admin_size - SES Admin OpenStack Flavour
   * master_size - SES Master OpenStack Flavour
   * worker_size - SES Worker OpenStack Flavour
