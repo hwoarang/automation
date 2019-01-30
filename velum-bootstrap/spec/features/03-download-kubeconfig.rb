@@ -43,17 +43,17 @@ feature "Download Kubeconfig" do
     expect(page).to have_text("You will see a download dialog")
     puts "<<< User is redirected back to velum"
 
+    puts ">>> User sees a download button to download file if neeeded"
+    expect(page).to have_text("Click here if the download has not started automatically.")
+    puts "<<< User sees a download button to download file if neeeded"
+
     puts ">>> User is prompted to download the kubeconfig"
-    download_uri = URI(page.html.match(/window\.location\.href = "(.*?)"/).captures[0])
-
-    http = Net::HTTP.new(download_uri.host, download_uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
-    request = Net::HTTP::Get.new(download_uri.request_uri)
-    response = http.request(request)
-
-    File.write("kubeconfig", response.body)
+    content_disposition = page.response_headers["Content-Disposition"]
+    expect(content_disposition).to eq("attachment; filename=kubeconfig")
     puts "<<< User is prompted to download the kubeconfig"
+
+    # poltergeist doesn't download the file itself so we need to download
+    # the file manually in order to make the other tests pass
+    download_kubeconfig
   end
 end
