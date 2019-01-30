@@ -12,39 +12,56 @@ import sys
 import urlparse
 from HTMLParser import HTMLParser
 
-KVM_REGEX = '.*KVM.*x86_64-.*\.qcow2$'
-KVM_SLE15_REGEX = '.*CaaSP-Stack.*kvm.*\.qcow2$'
-KVM_KUBIC_REGEX = '.*x86_64-.*Stack-hardware-x86_64.*\.qcow2$'
-DOCKER_REGEX = '%(docker_image)s.*x86_64-.*\.tar\.xz$'
-OPENSTACK_REGEX = '.*OpenStack-Cloud.*x86_64-.*\.qcow2$'
-ISO_REGEX = '.*-DVD-x86_64-.*-Media1\.iso$'
+# download-urls.json version 2 format:
+#  "baseurl" -> <channel> -> [default|provo] -> image_list_URL
+
+#  "regexp" -> <hyp_type> -> [<channel>|default] -> image_filename_regexp
+regexp = {
+    "kvm": {
+        "default": r'.*KVM.*x86_64-.*\.qcow2$',
+        "sle15": r'.*CaaSP-Stack.*kvm.*\.qcow2$',
+        "kubic": r'.*x86_64-.*Stack-hardware-x86_64.*\.qcow2$'
+    },
+    "docker": {
+        "default": r'%(docker_image)s.*x86_64-.*\.tar\.xz$'
+    },
+    "openstack": {
+        "default": r'.*OpenStack-Cloud.*x86_64-.*\.qcow2$'
+    },
+    "vmware": {
+        "default": r'SUSE-CaaSP-4.0.*CaaSP-Stack-VMware.*\.vmdk'
+    },
+    "iso": {
+        "default": r'.*-DVD-x86_64-.*-Media1\.iso$'
+    }
+}
+
 
 # Link to the package version tracker to allow exploring image contents
-PACKAGE_VERSION_TRACKER_IMAGE_URL_TPL = 'http://nodes.provo-prod.caasp.suse.net:30526/image/{}'
+PACKAGE_VERSION_TRACKER_IMAGE_URL_TPL = \
+    'http://nodes.provo-prod.caasp.suse.net:30526/image/{}'
 
 
 class ImageFinder(HTMLParser):
 
     def __init__(self, args):
+        if args.type not in regexp:
+            print(" >> Unknown Image Type: " + args.type)
+            raise SystemExit(1)
+
         HTMLParser.__init__(self)
         self.images = set()
 
-        if args.type == "docker":
-            self.regexp = DOCKER_REGEX % {"docker_image": args.image_name}
-        elif args.type == "kvm":
-            if args.url == "channel://kubic":
-                self.regexp = KVM_KUBIC_REGEX
-            elif args.url == "channel://devel_15":
-                self.regexp = KVM_SLE15_REGEX
-            else:
-                self.regexp = KVM_REGEX
-        elif args.type == "openstack":
-            self.regexp = OPENSTACK_REGEX
-        elif args.type == "iso":
-            self.regexp = ISO_REGEX
+        if args.url.startswith("channel://"):
+            chan = args.url[10:]
         else:
-            print(" >> Unknown Image Type: " + args.type)
-            raise SystemExit(1)
+            chan = "default"
+
+        self.regexp = regexp[args.type].get(chan, regexp[args.type]["default"])
+
+        if args.type == "docker":
+            self.regexp = self.regexp % {"docker_image": args.image_name}
+        print("Regexp: %r" % self.regexp)
 
     def get_image(self):
         if len(self.images) > 0:
@@ -152,7 +169,7 @@ def find_sha256(text):
     return None  # None will indicate that a sha256 match was not found or that too many were found
 
 def get_sha256(url, proxies):
-    print(" >> Downloading Sha256 File")
+    print(" >> Downloading sha256 File")
     partition = url.rpartition('/')
     sha256file = requests.head(url + '.sha256', proxies=proxies)
 
@@ -221,6 +238,7 @@ def download_file(args, canonical_url=None):
 
 # Remote Parsing functions
 
+
 def get_channel_url(args):
 
     channel = urlparse.urlparse(args.url).netloc
@@ -254,7 +272,7 @@ def get_channel_url(args):
 
     if args.type == "docker":
         base_url += 'images_container_base'
-    elif args.type in ["kvm", "openstack"]:
+    elif args.type in ["kvm", "openstack", "vmware"]:
         base_url += 'images'
         if args.url == "channel://devel_15":
             base_url += '-sle15'
@@ -263,6 +281,7 @@ def get_channel_url(args):
     else:
         print(" >> Unknown Image Type: " + args.type)
         raise SystemExit(1)
+    print(" >> Base URL: " + base_url)
 
     proxies = {
       'http': args.proxy,
@@ -283,11 +302,14 @@ def get_channel_url(args):
     }
 
 
-
-if __name__ == "__main__":
+def main():
 
     parser = argparse.ArgumentParser(description='Download CaaSP Image')
-    parser.add_argument('--type', choices=["docker", "kvm", "openstack", "iso"], help="Type of image to download", required=True)
+    parser.add_argument(
+        '--type',
+        choices=["docker", "kvm", "openstack", "iso", "vmware"],
+        help="Type of image to download", required=True
+    )
     parser.add_argument('--path', help="Where should the image be downloaded and linked (default: '../downloads')", default='../downloads')
     parser.add_argument('--image-name', help='Name of the Docker derived image to download (eg: "sles12-velum-development").')
     parser.add_argument('--proxy', help="Proxy server to use", default='')
@@ -306,7 +328,7 @@ if __name__ == "__main__":
         use_local_file(args)
 
     elif urlparse.urlparse(args.url).scheme == "channel":
-        if args.type in ["docker", "kvm", "openstack", "iso"]:
+        if args.type in ["docker", "kvm", "openstack", "iso", "vmware"]:
             if args.expand_channel != False:
                 sys.stdout.write("%(repo)s%(ext)s" % {'repo': get_channel_url(args).split("images")[0], 'ext': 'standard'})
                 sys.exit(0)
@@ -318,3 +340,7 @@ if __name__ == "__main__":
     else:
         print(" >> Unknown URL Type: " + args.url)
         raise SystemExit(2)
+
+
+if __name__ == "__main__":
+    main()
