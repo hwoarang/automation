@@ -45,7 +45,8 @@ feature "update Admin Node" do
     puts ">>> Wait until update is complete (Timeout: #{update_timeout})"
     with_screenshot(name: :update_complete) do
       within(".nodes-container") do
-        expect(page).to have_css(".fa-check-circle-o, .fa-times-circle", count: node_number, wait: update_timeout)
+        expect(page).to have_css(".fa-check-circle-o, .fa-times-circle",
+                                  count: node_number, wait: update_timeout)
       end
     end
     puts "<<< Update completed"

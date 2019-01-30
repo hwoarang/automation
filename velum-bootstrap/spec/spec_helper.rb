@@ -12,12 +12,15 @@ Dir[File.join(File.dirname(File.dirname(__FILE__)), "spec", "support", "**", "*.
   .each { |f| require f }
 
 def environment_path
-  ENV.fetch("ENVIRONMENT", "#{File.join(File.dirname(__FILE__), "../../")}caasp-kvm/environment.json")
+  caasp_kvm = "caasp-kvm/environment.json"
+  ENV.fetch("ENVIRONMENT", "#{File.join(File.dirname(__FILE__), "../../")}#{caasp_kvm}")
 end
 
 def environment(action: :read, body: nil)
   env = JSON.parse(File.read(environment_path))
-  abort("Please specify kubernetesExternalHost in environment.json") unless env["kubernetesExternalHost"]
+  unless env["kubernetesExternalHost"]
+    abort("Please specify kubernetesExternalHost in environment.json")
+  end
   abort("Please specify at least 2 minions in environment.json") if env["minions"].count < 2
 
   case action
@@ -59,19 +62,26 @@ def admin_minion
 end
 
 def node_number
-  environment["minions"].count { |element| element["role"] != "admin" && element["status"] != "removed" }
+  environment["minions"].count do |element| 
+	  element["role"] != "admin" && element["status"] != "removed" 
+  end
 end
 
 def master_node_number
-  environment["minions"].count { |element| element["role"] == "master" && element["status"] != "removed" }
+  environment["minions"].count do |element| 
+	  element["role"] == "master" && element["status"] != "removed" 
+  end
 end
-
 def worker_node_number
-  environment["minions"].count { |element| element["role"] == "worker" && element["status"] != "removed" }
+  environment["minions"].count do |element| 
+	  element["role"] == "worker" && element["status"] != "removed" 
+  end
 end
 
 def node_removable?(role: "master")
-  cnt = environment["minions"].count { |element| element["role"] == role && element["status"] != "removed" }
+  cnt = environment["minions"].count {
+	  |element| element["role"] == role      && element["status"] != "removed"
+   }
   !cnt.zero? && cnt != 1
 end
 

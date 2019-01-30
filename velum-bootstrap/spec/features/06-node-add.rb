@@ -81,11 +81,12 @@ feature "Add a Node" do
     end
     puts "<<< clicked add node"
 
-    orchestration_timeout = [[3600, new_nodes_count * 120].max, 7200].min
-    puts ">>> Wait until node add orchestration is complete (Timeout: #{orchestration_timeout})"
+    orch_timeout = [[3600, new_nodes_count * 120].max, 7200].min
+    puts ">>> Wait until node add orchestration is complete (Timeout: #{orch_timeout})"
     with_screenshot(name: :node_add_orchestration_complete) do
       within(".nodes-container") do
-        expect(page).to have_css(".fa-check-circle-o, .fa-times-circle", count: node_number, wait: orchestration_timeout)
+        expect(page).to have_css(".fa-check-circle-o, .fa-times-circle",
+                                  count: node_number, wait: orch_timeout)
       end
     end
     puts "<<< Node add orchestration completed"

@@ -81,7 +81,8 @@ feature "Boostrap cluster" do
 
     puts ">>> Waiting for page to settle"
     with_screenshot(name: :wait_for_settle) do
-      expect(page).to have_text("You currently have no nodes to be accepted for bootstrapping", wait: 240)
+      expect(page).to have_text("You currently have no nodes to be accepted for bootstrapping",
+               wait: 240)
     end
     puts "<<< Page has settled"
 
@@ -133,7 +134,8 @@ feature "Boostrap cluster" do
     puts ">>> Wait until orchestration is complete (Timeout: #{orchestration_timeout})"
     with_screenshot(name: :orchestration_complete) do
       within(".nodes-container") do
-        expect(page).to have_css(".fa-check-circle-o, .fa-times-circle", count: node_number, wait: orchestration_timeout)
+        expect(page).to have_css(".fa-check-circle-o, .fa-times-circle",
+         count: node_number, wait: orchestration_timeout)
       end
     end
     puts "<<< Orchestration completed"
