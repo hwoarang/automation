@@ -1,12 +1,12 @@
 {
   "baseurl": {
     "devel": {
-      "default": "http://download.suse.de/ibs/Devel:/CASP:/Head:/ControllerNode/",
-      "provo": "http://mirror.caasp.suse.net/ibs/Devel:/CASP:/Head:/ControllerNode/"
+      "default": "http://download.suse.de/ibs/Devel:/CASP:/Head:/ControllerNode/images-sle15/",
+      "provo": "http://mirror.caasp.suse.net/ibs/Devel:/CASP:/Head:/ControllerNode/images-sle15/"
     },
     "devel_15": {
-      "default": "http://download.suse.de/ibs/Devel:/CASP:/Head:/ControllerNode/",
-      "provo": "http://mirror.caasp.suse.net/ibs/Devel:/CASP:/Head:/ControllerNode/"
+      "default": "http://download.suse.de/ibs/Devel:/CASP:/Head:/ControllerNode/images-sle15/",
+      "provo": "http://mirror.caasp.suse.net/ibs/Devel:/CASP:/Head:/ControllerNode/images-sle15/"
     },
     "sandbox": {
       "default": "http://download.suse.de/ibs/Devel:/CASP:/SandBox/"
