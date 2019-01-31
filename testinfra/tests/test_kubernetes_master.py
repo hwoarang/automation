@@ -84,13 +84,13 @@ class TestKubernetesMaster(object):
         )
 
         env = TestUtils.environment()
-        assert (len(nodes["Items"]) == sum(1 for i in env["minions"] if i["role"] != "admin" and i["status"] == "bootstrapped"))
+        assert (len(nodes["items"]) == sum(1 for i in env["minions"] if i["role"] != "admin" and i["status"] == "bootstrapped"))
 
         # Check all nodes are marked as "Ready" in k8s
-        for node in nodes["Items"]:
-            for item in node["Status"]["Conditions"]:
-                if item["Type"] is "Ready":
-                    assert bool(item["Status"])
+        for node in nodes["items"]:
+            for item in node["status"]["conditions"]:
+                if item["type"] is "Ready":
+                    assert bool(item["status"])
 
     @pytest.mark.bootstrapped
     def test_salt_id(self, host):
