@@ -70,16 +70,16 @@ Usage:
 
   * Setup your workstation
 
-    --setup                     Install Dev Env Dependencies
+    --setup                          Install Dev Env Dependencies
 
   * Building a cluster
 
     -b|--build                       Run the CaaSP KVM Build Step
-    -m|--masters <INT>               Number of masters to build (Default: CAASP_NUM_MASTERS)
-    -w|--workers <INT>               Number of workers to build (Default: CAASP_NUM_WORKERS)
-    -u|--update-deployment           Update Terraform deployment (Default: false)
     -d|--destroy                     Run the CaaSP KVM Destroy Step
     -i|--image                       Image to use (Default: CAASP_IMAGE)
+    -m|--masters <INT>               Number of masters to build (Default: CAASP_NUM_MASTERS)
+    -u|--update-deployment           Update Terraform deployment (Default: false)
+    -w|--workers <INT>               Number of workers to build (Default: CAASP_NUM_WORKERS)
     --vanilla                        Do not inject devenv code, use vanilla caasp (Default: false)
     --disable-meltdown-spectre-fixes Disable meltdown and spectre fixes (Default: false)
     --enable-tiller                  Enable Helm Tiller
@@ -89,22 +89,22 @@ Usage:
     Velum Username: test@test.com
     Velum Password: password
 
-    -B|--bootstrap              Bootstrap CaaSP cluster
+    -B|--bootstrap                   Bootstrap CaaSP cluster
 
   * Testing a cluster
 
-    -T|--testinfra              Run testinfra tests
+    -T|--testinfra                   Run testinfra tests
 
   * Common options
 
-    -p|--parallelism            Set terraform parallelism (Default: CAASP_PARALLELISM)
-    -P|--proxy                  Set HTTP Proxy (Default: CAASP_HTTP_PROXY)
-    -L|--location               Set location used for downloads (Default: CAASP_LOCATION or 'default')
+    -p|--parallelism                 Set terraform parallelism (Default: CAASP_PARALLELISM)
+    -P|--proxy                       Set HTTP Proxy (Default: CAASP_HTTP_PROXY)
+    -L|--location                    Set location used for downloads (Default: CAASP_LOCATION or 'default')
 
   * Advanced Options
 
-    --plan                      Run the CaaSP KVM Plan Step
-    --extra-repo <STR>          URL of a custom repository on the master(s)/worker(s) (Default: CAASP_EXTRA_REPO)
+    --plan                           Run the CaaSP KVM Plan Step
+    --extra-repo <STR>               URL of a custom repository on the master(s)/worker(s) (Default: CAASP_EXTRA_REPO)
 
   * Examples:
 
@@ -150,84 +150,99 @@ clone_needed_github_repos() {
   popd
 } 
 
+OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,plan,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
+OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
+eval set -- "$OPTS"
 
 # parse options
-while [[ $# > 0 ]] ; do
+while true; do
   case $1 in
-    --setup)
+    -B|--bootstrap)
       ACTION=1
-      RUN_SETUP=1
+      RUN_BOOTSTRAP=1
+      shift
       ;;
     -b|--build)
       ACTION=1
       RUN_BUILD=1
-      ;;
-    -m|--masters)
-      MASTERS="$2"
-      shift
-      ;;
-    -w|--workers)
-      WORKERS="$2"
       shift
       ;;
     -d|--destroy)
       ACTION=1
       RUN_DESTROY=1
-      ;;
-    -u|--update-deployment)
-      ACTION=1
-      RUN_UPDATE_DEPLOYMENT=1
-      ;;
-    -i|--image)
-      IMAGE="$2"
-      shift
-      ;;
-    --vanilla)
-      VANILLA="true"
-      ;;
-    --disable-meltdown-spectre-fixes)
-      DISABLE_MELTDOWN_SPECTRE="true"
-      ;;
-    --enable-tiller)
-      ENABLE_TILLER=true
-      ;;
-    -B|--bootstrap)
-      ACTION=1
-      RUN_BOOTSTRAP=1
-      ;;
-    -T|--testinfra)
-      ACTION=1
-      RUN_TESTINFRA=1
-      ;;
-    -p|--parallelism)
-      PARALLELISM="$2"
-      shift
-      ;;
-    -P|--proxy)
-      PROXY="$2"
-      shift
-      ;;
-    -L|--location)
-      LOCATION="$2"
-      shift
-      ;;
-    --plan)
-      ACTION=1
-      RUN_PLAN=1
-      ;;
-    --extra-repo)
-      EXTRA_REPO="$2"
       shift
       ;;
     -h|--help)
       usage
       ;;
+    -i|--image)
+      IMAGE="$2"
+      shift 2
+      ;;
+    -L|--location)
+      LOCATION="$2"
+      shift 2
+      ;;
+    -m|--masters)
+      MASTERS="$2"
+      shift 2
+      ;;
+    -P|--proxy)
+      PROXY="$2"
+      shift 2
+      ;;
+    -p|--parallelism)
+      PARALLELISM="$2"
+      shift 2
+      ;;
+    -T|--testinfra)
+      ACTION=1
+      RUN_TESTINFRA=1
+      shift
+      ;;
+    -u|--update-deployment)
+      ACTION=1
+      RUN_UPDATE_DEPLOYMENT=1
+      shift
+      ;;
+    -w|--workers)
+      WORKERS="$2"
+      shift 2
+      ;;
+    --disable-meltdown-spectre-fixes)
+      DISABLE_MELTDOWN_SPECTRE="true"
+      shift
+      ;;
+    --enable-tiller)
+      ENABLE_TILLER=true
+      shift
+      ;;
+    --extra-repo)
+      EXTRA_REPO="$2"
+      shift 2
+      ;;
+    --plan)
+      ACTION=1
+      RUN_PLAN=1
+      shift
+      ;;
+    --setup)
+      ACTION=1
+      RUN_SETUP=1
+      shift
+      ;;
+    --vanilla)
+      VANILLA="true"
+      ;;
+    --)
+      shift
+      break
+      ;;
     *)
-      log "Invalid option: $1"
-      usage
+      echo "Internal error!"
+      exit 1
       ;;
   esac
-  shift
 done
 
 ##############################################################
