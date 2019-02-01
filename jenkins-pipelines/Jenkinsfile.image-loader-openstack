@@ -8,7 +8,7 @@ properties([
     disableConcurrentBuilds(),
     pipelineTriggers([
         [$class: 'org.jenkinsci.plugins.parameterizedscheduler.ParameterizedTimerTrigger',
-            parameterizedSpecification: '@midnight % CHANNEL=devel\n@midnight % CHANNEL=release'
+            parameterizedSpecification: '@midnight % CHANNEL=devel\n@midnight % CHANNEL=devel'
         ]
     ]),
     parameters([
