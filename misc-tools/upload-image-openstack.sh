@@ -14,6 +14,10 @@ source $OPENRC
 echo "[+] Checking if we already have this image: $IMAGE_NAME"
 
 if ! openstack image list --public | grep " $IMAGE_NAME "; then
+    echo "[+] Deleting previous SUSE CaaSP qcow2 VM image for {version=$IMAGE_VERSION, channel=$CHANNEL}"
+    for images in $(openstack image list -c ID -f value --property caasp-version="${IMAGE_VERSION}" --property caasp-channel="${CHANNEL}"); do
+        openstack image delete $images
+    done
     echo "[+] Uploading SUSE CaaSP qcow2 VM image: $IMAGE_NAME"
     openstack image create $IMAGE_NAME --private --disk-format qcow2 --container-format bare --min-disk 40 --file $IMAGE_FILENAME \
         --property caasp-version="$IMAGE_VERSION" \
