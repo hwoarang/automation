@@ -37,6 +37,8 @@ LOCATION=${CAASP_LOCATION:-}
 PARALLELISM=${CAASP_PARALLELISM:-1}
 ENABLE_TILLER=${CAASP_ENABLE_TILLER:-false}
 EXTRA_REPO=${CAASP_EXTRA_REPO:-}
+PLATFORM="${CAASP_PLATFORM:-caasp-kvm}"
+declare -r PLATFORMS=(caasp-kvm caasp-openstack-terraform)
 
 EARLY_DIST_PACKAGES="lsb-release"
 DIST_PACKAGES="jq \
@@ -80,6 +82,7 @@ Usage:
     -m|--masters <INT>               Number of masters to build (Default: CAASP_NUM_MASTERS)
     -u|--update-deployment           Update Terraform deployment (Default: false)
     -w|--workers <INT>               Number of workers to build (Default: CAASP_NUM_WORKERS)
+    --platform                       Platform to deploy CaaSP on (Default: CAASP_PLATTFORM)
     --vanilla                        Do not inject devenv code, use vanilla caasp (Default: false)
     --disable-meltdown-spectre-fixes Disable meltdown and spectre fixes (Default: false)
     --enable-tiller                  Enable Helm Tiller
@@ -148,9 +151,21 @@ clone_needed_github_repos() {
         fi
   done
   popd
-} 
+}
 
-OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,plan,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
+in_array() {
+    local x item=${1} _found=1
+    shift
+    declare -a local p=(${@})
+    for x in ${p[@]}; do
+        if [[ ${item} == ${x} ]]; then
+            _found=0
+            break
+        fi
+    done
+    return $_found
+}
+
 OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
 eval set -- "$OPTS"
 
@@ -226,6 +241,13 @@ while true; do
       RUN_PLAN=1
       shift
       ;;
+    --platform)
+      ACTION=1
+      PLATFORM=$2
+      # Check that platform is actually supported
+      ! in_array ${PLATFORM} "${PLATFORMS[@]}" && echo "Unsupported platform: $PLATFORM" && exit 1
+      shift 2
+      ;;
     --setup)
       ACTION=1
       RUN_SETUP=1
@@ -247,15 +269,15 @@ done
 
 ##############################################################
 
-CAASP_KVM_ARGS="-m $MASTERS -w $WORKERS --image $IMAGE"
-[ -n "$PARALLELISM" ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --parallelism $PARALLELISM"
-[ -n "$PROXY"       ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --proxy $PROXY"
-[ -n "$LOCATION"    ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --location $LOCATION"
-[ -n "$VANILLA"     ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --vanilla"
-[ -n "$DISABLE_MELTDOWN_SPECTRE" ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --disable-meltdown-spectre-fixes"
-[ -n "$EXTRA_REPO"  ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --extra-repo $EXTRA_REPO"
+CAASP_PLATFORM_ARGS="-m $MASTERS -w $WORKERS --image $IMAGE"
+[ -n "$PARALLELISM" ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --parallelism $PARALLELISM"
+[ -n "$PROXY"       ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --proxy $PROXY"
+[ -n "$LOCATION"    ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --location $LOCATION"
+[ -n "$VANILLA"     ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --vanilla"
+[ -n "$DISABLE_MELTDOWN_SPECTRE" ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --disable-meltdown-spectre-fixes"
+[ -n "$EXTRA_REPO"  ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --extra-repo $EXTRA_REPO"
 
-export ENVIRONMENT="$DIR/caasp-kvm/environment.json"
+export ENVIRONMENT="$DIR/$PLATFORM/environment.json"
 
 # Core methods
 setup() {
@@ -300,18 +322,18 @@ setup() {
 }
 
 plan() {
-  log "Planning CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --plan $CAASP_KVM_ARGS )
+  log "Planning CaaSP Environment"
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --plan $CAASP_PLATFORM_ARGS )
 }
 
 build() {
-  log "Starting CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --build $CAASP_KVM_ARGS )
+  log "Starting CaaSP Environment"
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --build $CAASP_PLATFORM_ARGS )
 }
 
 update_deployment() {
-  log "Updating CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --update-deployment $CAASP_KVM_ARGS )
+  log "Updating CaaSP Environment"
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --update-deployment $CAASP_PLATFORM_ARGS )
 }
 
 bootstrap() {
@@ -334,7 +356,7 @@ testinfra() {
 
 destroy() {
   log "Destroy CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --destroy $CAASP_KVM_ARGS)
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --destroy $CAASP_PLATFORM_ARGS)
 }
 
 [ -n "$ACTION" ] || usage
