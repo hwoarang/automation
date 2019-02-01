@@ -13,7 +13,7 @@ IMAGE_NAME="CaaSP-${CHANNEL}-${IMAGE_VERSION}-${IMAGE_BUILD}"
 source $OPENRC
 echo "[+] Checking if we already have this image: $IMAGE_NAME"
 
-if ! openstack image list --public | grep " $IMAGE_NAME "; then
+if ! openstack image list --property caasp-version="${IMAGE_VERSION}" --property caasp-channel="${CHANNEL}" --property caasp-build="${IMAGE_BUILD}"; then
     echo "[+] Deleting previous SUSE CaaSP qcow2 VM image for {version=$IMAGE_VERSION, channel=$CHANNEL}"
     for images in $(openstack image list -c ID -f value --property caasp-version="${IMAGE_VERSION}" --property caasp-channel="${CHANNEL}"); do
         openstack image delete $images
