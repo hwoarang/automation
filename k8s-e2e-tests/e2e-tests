@@ -5,6 +5,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ARTIFACTS_PATH=$DIR/results
 KUBECONFIG=
 SONOBUOY_RUN_ARGS=()
+SONOBUOY_IMAGE="gcr.io/heptio-images/sonobuoy"
+SONOBUOY_VERSION="latest"
 E2E_WAIT_TIME=${E2E_WAIT_TIME:-120} # How long to wait for the test to finish in minutes
 
 USAGE=$(cat <<USAGE
@@ -17,6 +19,8 @@ Usage:
 Other:
     --e2e-focus              set the e2e tests to focus on
     --e2e-skip               set the e2e tests to skip
+    --sonobuoy-image         set the sonobuoy image to be used ('gcr.io/heptio-images/sonobuoy' by default)
+    --sonobuoy-version       set the sonobuoy version to be used ('latest' by default)
     --artifacts <DIR>        directory where junit XML files are stored
 
 USAGE
@@ -37,7 +41,6 @@ while [[ $# > 0 ]] ; do
     -k|--kubeconfig)
       KUBECONFIG="$(realpath $2)"
       check_file $KUBECONFIG
-      SONOBUOY_RUN_ARGS+=(--kubeconfig $KUBECONFIG)
       shift
       ;;
     --e2e-focus)
@@ -46,6 +49,14 @@ while [[ $# > 0 ]] ; do
       ;;
     --e2e-skip)
       SONOBUOY_RUN_ARGS+=(--e2e-skip "'$2'")
+      shift
+      ;;
+    --sonobuoy-image)
+      SONOBUOY_IMAGE="$2"
+      shift
+      ;;
+    --sonobuoy-version)
+      SONOBUOY_VERSION="$2"
       shift
       ;;
     --artifacts)
@@ -60,52 +71,41 @@ while [[ $# > 0 ]] ; do
   shift
 done
 
-test_config() {
-    cat << EOF > sonobuoy.json
-{
-    "plugins": [ { "name": "e2e" } ]
-}
-EOF
-
-    SONOBUOY_RUN_ARGS+=(--config sonobuoy.json)
+sonobuoy() {
+    # Runs sonobuoy from the given image and version, and:
+    #   - Mount the kubeconfig file in `/root/.kube/config` in the container
+    #   - Mount the host artifacts path in the artifacts path in the container
+    docker run --rm --network=host -v $KUBECONFIG:/root/.kube/config -v $ARTIFACTS_PATH:$ARTIFACTS_PATH -i $SONOBUOY_IMAGE:$SONOBUOY_VERSION ./sonobuoy "$@"
 }
 
 run_tests() {
-    if ! command -v sonobuoy > /dev/null; then
-        abort "Package sonobuoy needs to be installed"
-    fi
-
-    test_config
-
-    echo "${SONOBUOY_RUN_ARGS[@]}" | xargs -t sonobuoy run
+    sonobuoy run "${SONOBUOY_RUN_ARGS[@]}"
 
     # wait a bit to let the test start
-    n=6
-    while test $n -gt 0 && sonobuoy status --kubeconfig $KUBECONFIG 2>&1 | grep 'pod has status \\"Pending\\"'
+    while ! sonobuoy status | grep 'Sonobuoy is still running'
     do
         sleep 20
-        n=$(($n - 1))
     done
 
     # wait until tests will finish
     n=$E2E_WAIT_TIME
     while test $n -gt 0; do
         # Check the status every two minutes
-        if ! (($n % 2)) && ! sonobuoy status --kubeconfig $KUBECONFIG 2>&1 | grep "Sonobuoy is still running"; then
+        if ! (($n % 2)) && ! sonobuoy status | grep "Sonobuoy is still running"; then
             break
         fi
         sleep 60
         n=$(($n - 1))
     done
 
-    if sonobuoy status --kubeconfig $KUBECONFIG 2>&1 | grep "Sonobuoy has completed"; then
+    if sonobuoy status | grep "Sonobuoy has completed"; then
         # Create the artifacts path
         mkdir -p $ARTIFACTS_PATH
         # Copy results from the container
-        sonobuoy retrieve --kubeconfig $KUBECONFIG $ARTIFACTS_PATH
+        sonobuoy retrieve $ARTIFACTS_PATH
         # Extract conformance tests tarball results
         tar -xzf ${ARTIFACTS_PATH}/*_sonobuoy_*.tar.gz -C ${ARTIFACTS_PATH}/
-    elif sonobuoy status --kubeconfig $KUBECONFIG 2>&1 | grep "Sonobuoy is still running"; then
+    elif sonobuoy status | grep "Sonobuoy is still running"; then
         abort "Kubernetes e2e tests ran out of time"
     else
         abort "Kubernetes e2e tests failed"
