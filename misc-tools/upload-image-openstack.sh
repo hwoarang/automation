@@ -15,7 +15,7 @@ echo "[+] Checking if we already have this image: $IMAGE_NAME"
 
 if ! openstack image list --public | grep " $IMAGE_NAME "; then
     echo "[+] Uploading SUSE CaaSP qcow2 VM image: $IMAGE_NAME"
-    openstack image create $IMAGE_NAME --public --disk-format qcow2 --container-format bare --min-disk 40 --file $IMAGE_FILENAME \
+    openstack image create $IMAGE_NAME --private --disk-format qcow2 --container-format bare --min-disk 40 --file $IMAGE_FILENAME \
         --property caasp-version="$IMAGE_VERSION" \
         --property caasp-build="$IMAGE_BUILD" \
         --property caasp-channel="$CHANNEL"
