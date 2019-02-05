@@ -79,7 +79,16 @@ sonobuoy() {
 }
 
 run_tests() {
-    sonobuoy run "${SONOBUOY_RUN_ARGS[@]}"
+    # We need to specify a specific sonobuoy config file in this branch because
+    # the systemd_logs plugin fails to succeed.
+    sonobuoy_config=$(mktemp /tmp/sonobuoy-config-XXXXXXXXXX.yaml)
+    cat <<EOF > $sonobuoy_config
+{
+    "plugins": [ { "name": "e2e" } ]
+}
+EOF
+    docker run --rm --network=host -v $sonobuoy_config:/sonobuoy-config.json -v $KUBECONFIG:/root/.kube/config -v $ARTIFACTS_PATH:$ARTIFACTS_PATH -i $SONOBUOY_IMAGE:$SONOBUOY_VERSION ./sonobuoy run --config /sonobuoy-config.json "${SONOBUOY_RUN_ARGS[@]}"
+    rm $sonobuoy_config
 
     # wait a bit to let the test start
     while ! sonobuoy status | grep 'Sonobuoy is still running'
