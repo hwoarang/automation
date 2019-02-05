@@ -247,15 +247,11 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker" {
 }
 
 resource "openstack_compute_instance_v2" "admin" {
-  name       = "caasp-admin"
+  name       = "caasp-admin-${var.stack_name}"
   image_name = "${var.image_name}"
 
-  connection {
-    private_key = "${file("ssh/id_caasp.pub")}"
-  }
-
   flavor_name = "${var.admin_size}"
-  key_pair    = "caasp-ssh-${var.stack_name}"
+  key_pair    = "${openstack_compute_keypair_v2.keypair.name}"
 
   network {
     name = "${var.internal_net}"
@@ -280,15 +276,11 @@ resource "openstack_compute_floatingip_associate_v2" "admin_ext_ip" {
 
 resource "openstack_compute_instance_v2" "master" {
   count      = "${var.masters}"
-  name       = "caasp-master${count.index}"
+  name       = "caasp-master-${var.stack_name}${count.index}"
   image_name = "${var.image_name}"
 
-  connection {
-    private_key = "${file("ssh/id_caasp.pub")}"
-  }
-
   flavor_name = "${var.master_size}"
-  key_pair    = "caasp-ssh-${var.stack_name}"
+  key_pair    = "${openstack_compute_keypair_v2.keypair.name}"
 
   network {
     name = "${var.internal_net}"
@@ -315,15 +307,11 @@ resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
 
 resource "openstack_compute_instance_v2" "worker" {
   count      = "${var.workers}"
-  name       = "caasp-worker${count.index}"
+  name       = "caasp-worker-${var.stack_name}${count.index}"
   image_name = "${var.image_name}"
 
-  connection {
-    private_key = "${file("ssh/id_caasp.pub")}"
-  }
-
   flavor_name = "${var.worker_size}"
-  key_pair    = "caasp-ssh-${var.stack_name}"
+  key_pair    = "${openstack_compute_keypair_v2.keypair.name}"
 
   network {
     name = "${var.internal_net}"
