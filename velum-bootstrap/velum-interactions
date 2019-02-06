@@ -21,7 +21,7 @@ RUN_ADD_REGISTRY=false
 REMOTE_REGISTRY_NAME=${REMOTE_REGISTRY_NAME:-'test-remote-registry'}
 REMOTE_REGISTRY_URL=${REMOTE_REGISTRY_URL:-'http://test-remote-registry.com'}
 
-ENVIRONMENT=${CAASP_ENVIRONMENT:-$DIR/../caasp-kvm/environment.json}
+[[ ${ENVIRONMENT:-x} == x ]] && ENVIRONMENT=${CAASP_ENVIRONMENT:-$DIR/../caasp-kvm/environment.json}
 
 USAGE=$(cat <<USAGE
 Usage:
