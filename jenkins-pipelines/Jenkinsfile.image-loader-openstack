@@ -8,7 +8,7 @@ properties([
     disableConcurrentBuilds(),
     pipelineTriggers([
         [$class: 'org.jenkinsci.plugins.parameterizedscheduler.ParameterizedTimerTrigger',
-            parameterizedSpecification: '@midnight % CHANNEL=devel\n@midnight % CHANNEL=release'
+            parameterizedSpecification: '@midnight % CHANNEL=devel\n@midnight % CHANNEL=devel'
         ]
     ]),
     parameters([
@@ -36,7 +36,7 @@ node('leap15.0') {
 
         stage('Upload Image') {
             dir('automation/misc-tools') {
-                withCredentials([file(credentialsId: 'prvcld-cloud-shared', variable: 'OPENRC')]) {
+                withCredentials([file(credentialsId: 'ecp-cloud-shared', variable: 'OPENRC')]) {
                     sh(script: "./upload-image-openstack.sh ${OPENRC} ${CHANNEL}")
                 }
             }
