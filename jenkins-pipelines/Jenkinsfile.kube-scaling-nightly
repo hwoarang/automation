@@ -19,17 +19,9 @@ coreKubicProjectPeriodic(
 ) {
     // empty preBootstrapBody
 } {
-    // Run through the upgrade orchestration
-    upgradeEnvironmentStage1(
-        environment: environment,
-        fakeUpdatesAvailable: true
-    )
-
-    upgradeEnvironmentStage2(
-        environment: environment
-    )
-
-    coreKubicProjectNodeTests(
-        environment: environment
+    coreKubicProjectClusterTests(
+      podName: 'default',
+      replicaCount: 15,
+      replicasCreationIntervalSeconds: 600
     )
 }
