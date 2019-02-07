@@ -36,10 +36,8 @@ coreKubicProjectPeriodic(
         environment: environment
     )
 } {
-    // Run the Core Project Tests again
-    coreKubicProjectTests(
-        environment: environment,
-        podName: 'default'
+    coreKubicProjectNodeTests(
+        environment: environment
     )
 
     if (env.RUN_CONFORMANCE_TESTS.toBoolean()) {

@@ -25,9 +25,8 @@ coreKubicProjectPeriodic(
     workerCount: env.WORKER_COUNT.toInteger(),
 ){}
 {
-    coreKubicProjectTests(
-        environment: environment,
-        podName: 'default',
+    coreKubicProjectNodeTests(
+        environment: environment
     )
     return environment
 }
