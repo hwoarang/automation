@@ -34,6 +34,7 @@ VANILLA=${CAASP_VANILLA:-}
 DISABLE_MELTDOWN_SPECTRE=${CAASP_DISABLE_MELTDOWN_SPECTRE:-}
 PROXY=${CAASP_HTTP_PROXY:-}
 LOCATION=${CAASP_LOCATION:-}
+OPENRC=${OPENRC:-}
 PARALLELISM=${CAASP_PARALLELISM:-1}
 ENABLE_TILLER=${CAASP_ENABLE_TILLER:-false}
 EXTRA_REPO=${CAASP_EXTRA_REPO:-}
@@ -100,6 +101,7 @@ Usage:
 
   * Common options
 
+    --openrc                         openRC file (only for OpenStack platforms)
     -p|--parallelism                 Set terraform parallelism (Default: CAASP_PARALLELISM)
     -P|--proxy                       Set HTTP Proxy (Default: CAASP_HTTP_PROXY)
     -L|--location                    Set location used for downloads (Default: CAASP_LOCATION or 'default')
@@ -166,7 +168,7 @@ in_array() {
     return $_found
 }
 
-OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
+OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,openrc,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
 eval set -- "$OPTS"
 
 # parse options
@@ -236,6 +238,10 @@ while true; do
       EXTRA_REPO="$2"
       shift 2
       ;;
+    --openrc)
+      OPENRC="$2"
+      shift 2
+      ;;
     --plan)
       ACTION=1
       RUN_PLAN=1
@@ -276,6 +282,7 @@ CAASP_PLATFORM_ARGS="-m $MASTERS -w $WORKERS --image $IMAGE"
 [ -n "$VANILLA"     ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --vanilla"
 [ -n "$DISABLE_MELTDOWN_SPECTRE" ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --disable-meltdown-spectre-fixes"
 [ -n "$EXTRA_REPO"  ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --extra-repo $EXTRA_REPO"
+[ -n "$OPENRC" ] && [[ $PLATFORM =~ openstack ]] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --openrc $OPENRC"
 
 export ENVIRONMENT="$DIR/$PLATFORM/environment.json"
 
