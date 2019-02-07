@@ -5,27 +5,23 @@ properties([
     buildDiscarder(logRotator(numToKeepStr: '31', daysToKeepStr: '31')),
     disableConcurrentBuilds(),
     pipelineTriggers([cron('H H(3-5) * * *')]),
+    parameters([
+        booleanParam(name: 'ENVIRONMENT_DESTROY', defaultValue: true, description: 'Destroy env once done?')
+    ]),
 ])
 
 def kvmTypeOptions = kubicLib.CaaspKvmTypeOptions.new();
 kvmTypeOptions.vanilla = true
 
 coreKubicProjectPeriodic(
-    environmentTypeOptions: kvmTypeOptions
+    environmentTypeOptions: kvmTypeOptions,
+    environmentDestroy: env.ENVIRONMENT_DESTROY.toBoolean(),
 ) {
     // empty preBootstrapBody
 } {
-    // Run through the upgrade orchestration
-    upgradeEnvironmentStage1(
-        environment: environment,
-        fakeUpdatesAvailable: true
-    )
-
-    upgradeEnvironmentStage2(
-        environment: environment
-    )
-
-    coreKubicProjectNodeTests(
-        environment: environment
+    coreKubicProjectClusterTests(
+      podName: 'default',
+      replicaCount: 15,
+      replicasCreationIntervalSeconds: 600
     )
 }
