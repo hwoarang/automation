@@ -70,14 +70,6 @@
           scm-id: b69809ac-204e-47af-96fb-5f517643068c
 
 - project:
-    name: caasp-services
-    jobs:
-      - '{name}.integration':
-          scm-id: 7a6565a0-dd2a-47e2-a373-39ee96df730e
-      - '{name}.housekeeping':
-          scm-id: f663d323-0650-4f17-9342-6b61a037da1d
-
-- project:
     name: dex-branding
     jobs:
       - '{name}.housekeeping':
