@@ -13,34 +13,47 @@
 # limitations under the License.
 
 import pytest
+from .utils import TestUtils
 
 
 @pytest.mark.admin
 class TestKubicAdmin(object):
     """docstring for TestBaseEnv"""
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
-        "containerd",
-        "container-feeder",
         "kubelet",
     ])
     def test_services_running(self, host, service):
         host_service = host.service(service)
         assert host_service.is_running
 
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "docker",
-        "container-feeder",
         "kubelet",
     ])
     def test_services_enabled(self, host, service):
         host_service = host.service(service)
         assert host_service.is_enabled
 
+    @pytest.mark.bootstrapped
+    @pytest.mark.parametrize("service", [
+        "container-feeder",
+    ])
+    def test_service_non_registry(self, host, service):
+        """Test service is only running when not using registry."""
+        registry_conf = TestUtils.load_registry_configuration(host)
+        if not registry_conf['use_registry']:
+            host_service = host.service(service)
+            assert host_service.is_running
+
+    @pytest.mark.bootstrapped
     def test_salt_role(self, host):
         assert 'admin' in host.salt("grains.get", "roles")
 
+    @pytest.mark.bootstrapped
     def test_etcd_aliveness(self, host):
         cmd = "etcdctl cluster-health"
         health = host.run_expect([0], cmd)

@@ -16,17 +16,15 @@ import os
 import pytest
 import json
 
+from .utils import TestUtils
 
 @pytest.mark.master
 class TestKubernetesMaster(object):
-
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
         "kube-scheduler",
-        "docker",
-        "containerd",
-        "container-feeder",
         "kubelet",
         "kube-proxy"
     ])
@@ -34,12 +32,29 @@ class TestKubernetesMaster(object):
         host_service = host.service(service)
         assert host_service.is_running
 
+    @pytest.mark.bootstrapped
+    @pytest.mark.parametrize("service", [
+        "container-feeder",
+    ])
+    def test_service_non_registry(self, host, service):
+        """Test service is only running when not using registry."""
+        registry_conf = TestUtils.load_registry_configuration(host)
+        if not registry_conf['use_registry']:
+            host_service = host.service(service)
+            assert host_service.is_running
+
+    @pytest.mark.bootstrapped
+    @pytest.mark.skipif(
+        TestUtils.feature_matches('cri', {'implementation': 'docker'}),
+        reason="CRI is not Docker")
+    def test_docker_service_running(self, host, service):
+        assert host.service('docker').is_running
+
+    @pytest.mark.bootstrapped
     @pytest.mark.parametrize("service", [
         "kube-apiserver",
         "kube-controller-manager",
         "kube-scheduler",
-        "docker",
-        "container-feeder",
         "kubelet",
         "kube-proxy"
     ])
@@ -47,9 +62,18 @@ class TestKubernetesMaster(object):
         host_service = host.service(service)
         assert host_service.is_enabled
 
+    @pytest.mark.bootstrapped
+    @pytest.mark.skipif(
+        TestUtils.feature_matches('cri', {'implementation': 'docker'}),
+        reason="CRI is not Docker")
+    def test_docker_service_enabled(self, host, service):
+        assert host.service('docker').is_enabled
+
+    @pytest.mark.bootstrapped
     def test_salt_role(self, host):
         assert 'kube-master' in host.salt("grains.get", "roles")
 
+    @pytest.mark.bootstrapped
     def test_kubernetes_cluster(self, host):
         host.run(
             "kubectl cluster-info dump --output-directory=/tmp/cluster_info"
@@ -59,11 +83,8 @@ class TestKubernetesMaster(object):
             host.file("/tmp/cluster_info/nodes.json").content_string
         )
 
-        env_file = os.environ['ENVIRONMENT_JSON']
-        with open(env_file, 'r') as f:
-            env = json.load(f)
-
-        assert (len(nodes["Items"]) == sum(1 for i in env["minions"] if i["role"] != "admin" ))
+        env = TestUtils.environment()
+        assert (len(nodes["Items"]) == sum(1 for i in env["minions"] if i["role"] != "admin" and i["status"] == "bootstrapped"))
 
         # Check all nodes are marked as "Ready" in k8s
         for node in nodes["Items"]:
@@ -71,6 +92,7 @@ class TestKubernetesMaster(object):
                 if item["Type"] is "Ready":
                     assert bool(item["Status"])
 
+    @pytest.mark.bootstrapped
     def test_salt_id(self, host):
         machine_id = host.file('/etc/machine-id').content_string.rstrip()
         assert machine_id in host.salt("grains.get", "id")
