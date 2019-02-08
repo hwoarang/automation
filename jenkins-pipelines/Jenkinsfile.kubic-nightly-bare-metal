@@ -32,9 +32,7 @@ coreKubicProjectPeriodic(
         environment: environment
     )
 
-    // Run the Core Project Tests again
-    coreKubicProjectTests(
-        environment: environment,
-        podName: 'default'
+    coreKubicProjectNodeTests(
+        environment: environment
     )
 }

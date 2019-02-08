@@ -34,10 +34,8 @@ coreKubicProjectPeriodic(
       sh(script: "./automation/misc-tools/network-emulation setup all --env-json-path ${WORKSPACE}/environment.json -l ${WORKSPACE}/logs/netem-setup.log --latency ${LATENCY} --jitter ${JITTER} --packet-loss ${PACKET_LOSS} --duplication ${DUPLICATION} --corruption ${CORRUPTION} --bandwidth ${BANDWIDTH}")
     }
 
-    // Run the Core Project Tests again
-    coreKubicProjectTests(
-        environment: environment,
-        podName: 'default'
+    coreKubicProjectNodeTests(
+        environment: environment
     )
 
     stage('Remove Network Emulation') {
