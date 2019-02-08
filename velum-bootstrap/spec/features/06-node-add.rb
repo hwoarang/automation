@@ -2,10 +2,7 @@ require "spec_helper"
 require "yaml"
 
 feature "Add a Node" do
-
-  let(:node_number) { environment["minions"].count { |element| element["role"] != "admin" } }
-
-  before(:each) do
+  before do
     login
   end
 

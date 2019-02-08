@@ -2,22 +2,10 @@ require "spec_helper"
 require "yaml"
 
 feature "Remove a Node" do
-
-  let(:node_number) { environment["minions"].count { |element| element["role"] != "admin" } }
-  let(:master_node_removable?) do
-    environment["minions"].count { |element| element["role"] == "master" }.tap do |count|
-      !count.zero? && count != 1
-    end
-  end
-  let(:worker_node_removable?) do
-    environment["minions"].count { |element| element["role"] == "worker" }.tap do |count|
-      !count.zero? && count != 1
-    end
-  end
   let(:node_number_removable) do
     removable = node_number
-    removable -= 1 if master_node_removable?
-    removable -= 1 if worker_node_removable?
+    removable -= master_node_number unless node_removable?(role: "master")
+    removable -= worker_node_number unless node_removable?(role: "worker")
     removable
   end
 
@@ -46,13 +34,13 @@ feature "Remove a Node" do
 
     puts ">>> Click to remove a node"
     with_screenshot(name: :node_removal) do
-      node_link = find(".remove-node-link", match: :first)
       # mark node as inactive in environment.json
+      node_to_remove = find(".remove-node-link", match: :first)
       environment(
         action: :update,
-        body: set_minion_status(node_link["data-id"], "removed")
+        body:   set_minion_status(node_to_remove.first(:xpath, ".//..")["data-id"], "removed")
       )
-      node_link.click
+      node_to_remove.click
     end
 
     if page.has_content?("Unsupported cluster topology", wait: 5)
@@ -81,7 +69,7 @@ feature "Remove a Node" do
     puts ">>> Checking if node removal orchestration succeeded"
     with_screenshot(name: :node_removal_orchestration_succeeded) do
       within(".nodes-container") do
-        expect(page).to have_css(".fa-check-circle-o", count: node_number-1, wait: 5)
+        expect(page).to have_css(".fa-check-circle-o", count: node_number, wait: 5)
       end
       expect(page).not_to have_text("Removal Failed", wait: 5)
     end
