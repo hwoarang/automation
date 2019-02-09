@@ -34,7 +34,7 @@ echo $out
 
 for node in $(echo "$out" | jq -r '.minions[] | select(.["minion_id"]? == null) | [.addresses.publicIpv4] | join(" ")'); do
     machine_id=$(ssh root@$node $SSH_ARGS cat /etc/machine-id)
-    out=$(echo "$out" | jq ".minions | map(if (.addresses.publicIpv4 == \"$node\") then . + {\"minionID\": \"$machine_id\"} else . end) | {minions: .}")
+    out=$(echo "$out" | jq ".minions | map(if (.addresses.publicIpv4 == \"$node\") then . + {\"minionId\": \"$machine_id\"} else . end) | {minions: .}")
 done
 
 master=$(echo "$out" | jq -r '[.minions[] | select(.role=="master")] | .[0] | .fqdn')

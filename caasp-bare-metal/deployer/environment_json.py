@@ -31,7 +31,7 @@ def create_environment_json(admin_host_ipaddr, available_hosts):
         name, hw_serial, macaddr, ipaddr, machine_id = minion
         d["minions"].append({
            "minionId" : machine_id,
-           "index" : idx,
+           "index" : str(indexes[role]),
            "fqdn" : hw_serial,
            "addresses" : {
               "privateIpv4" : ipaddr,

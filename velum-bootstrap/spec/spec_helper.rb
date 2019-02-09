@@ -36,7 +36,7 @@ end
 def set_minion_status(minion_id, status)
   env = JSON.parse(File.read(environment_path))
   updated_minions = env["minions"].each do |m|
-    m["minionID"] == minion_id && m["status"] = status
+    m["minionId"] == minion_id && m["status"] = status
   end
   env["minions"] = updated_minions
   env
