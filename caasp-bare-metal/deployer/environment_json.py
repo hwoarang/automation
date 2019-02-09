@@ -44,7 +44,7 @@ def create_environment_json(admin_host_ipaddr, available_hosts):
             # d["minions"][-1]["proxyCommand"] = "ssh root@{} -W %h:%p".format(master_ipaddr)
 
         d["minions"].append({
-           "minionID" : machine_id,
+           "minionId" : machine_id,
            "index" : str(indexes[role]),
            "fqdn" : hw_serial,
            "addresses" : {

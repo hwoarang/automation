@@ -33,7 +33,7 @@ out=$(cat $TF_STATE | \
 
 for node in $(echo "$out" | jq -r '.minions[] | select(.["minion_id"]? == null) | [.addresses.publicIpv4] | join(" ")'); do
     machine_id=$(ssh root@$node $SSH_ARGS cat /etc/machine-id)
-    out=$(echo "$out" | jq ".minions | map(if (.addresses.publicIpv4 == \"$node\") then . + {\"minionID\": \"$machine_id\"} else . end) | {minions: .}")
+    out=$(echo "$out" | jq ".minions | map(if (.addresses.publicIpv4 == \"$node\") then . + {\"minionId\": \"$machine_id\"} else . end) | {minions: .}")
     fqdn=$(echo $out | jq -r ".minions[] | select(.addresses.publicIpv4 == \"$node\") | .fqdn")
     ip=$(dig +short $fqdn)
     # only set the reverse DNS as fqdn if the old fqdn does not resolve to the node IP
