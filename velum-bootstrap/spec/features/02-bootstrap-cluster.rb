@@ -3,7 +3,7 @@ require "yaml"
 
 feature "Boostrap cluster" do
   let(:hostnames) { environment["minions"].map { |m| m["fqdn"] if m["role"] != "admin" }.compact }
-  let(:minion_ids) { environment["minions"].map { |m| m["minionID"] }.compact }
+  let(:minion_ids) { environment["minions"].map { |m| m["minionId"] }.compact }
 
   before do
     login unless inspect.include? "User registers"
@@ -90,7 +90,7 @@ feature "Boostrap cluster" do
     with_screenshot(name: :select_minion_roles) do
       environment["minions"].each do |minion|
         next unless %w[master worker].include?(minion["role"])
-        within("tr", text: minion["minionID"]) do
+        within("tr", text: minion["minionId"]) do
           find(".#{minion["role"]}-btn").click
         end
       end

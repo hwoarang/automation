@@ -58,12 +58,12 @@ feature "Add a Node" do
     with_screenshot(name: :select_new_minion_roles) do
       environment["minions"].each do |minion|
         # skip all minions that have been assigned already
-        unless page.text.include? minion["minionID"]
+        unless page.text.include? minion["minionId"]
           new_nodes_count -= 1
           next
         end
         next unless %w[master worker].include?(minion["role"])
-        within("tr", text: minion["minionID"]) do
+        within("tr", text: minion["minionId"]) do
           find(".#{minion["role"]}-btn").click
         end
       end

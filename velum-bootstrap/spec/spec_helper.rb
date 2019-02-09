@@ -44,7 +44,7 @@ end
 def set_minion_status(minion_id, status)
   env = JSON.parse(File.read(environment_path))
   updated_minions = env["minions"].each do |m|
-    m["minionID"] == minion_id && m["status"] = status
+    m["minionId"] == minion_id && m["status"] = status
   end
   env["minions"] = updated_minions
   env
@@ -62,19 +62,19 @@ def admin_minion
 end
 
 def node_number
-  environment["minions"].count do |element| 
-	  element["role"] != "admin" && element["status"] != "removed" 
+  environment["minions"].count do |element|
+	  element["role"] != "admin" && element["status"] != "removed"
   end
 end
 
 def master_node_number
-  environment["minions"].count do |element| 
-	  element["role"] == "master" && element["status"] != "removed" 
+  environment["minions"].count do |element|
+	  element["role"] == "master" && element["status"] != "removed"
   end
 end
 def worker_node_number
-  environment["minions"].count do |element| 
-	  element["role"] == "worker" && element["status"] != "removed" 
+  environment["minions"].count do |element|
+	  element["role"] == "worker" && element["status"] != "removed"
   end
 end
 
