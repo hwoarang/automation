@@ -89,7 +89,7 @@ def extract_target_ipaddrs(args, env):
     # Extract target host ipaddrs
     role = args.target_roles.rstrip('s')
     target_ipaddrs = [
-        b["addresses"]["privateIpv4"] for b in env["minions"]
+        b["addresses"]["publicIpv4"] for b in env["minions"]
         if role in ("all", b["role"])
     ]
     if not target_ipaddrs:

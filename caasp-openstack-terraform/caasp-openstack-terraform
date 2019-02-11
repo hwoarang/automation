@@ -1,0 +1,238 @@
+#!/bin/bash
+
+set -euo pipefail
+
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+# options
+ACTION=
+RUN_BUILD=
+RUN_DESTROY=
+RUN_UPDATE_DEPLOYMENT=
+RUN_PLAN=
+
+# caasp or kubic
+DIST=${CAASP_DIST:-caasp}
+
+MASTERS=${CAASP_NUM_MASTERS:-1}
+WORKERS=${CAASP_NUM_WORKERS:-2}
+IMAGE=${CAASP_IMAGE:-channel://devel}
+NETWORK=${CAASP_NETWORK:-container-ci}
+PARALLELISM=${CAASP_PARALLELISM:-1}
+CAASP_NAME_PREFIX=${CAASP_NAME_PREFIX:-$(whoami)}
+
+TFVARS_FILE=${CAASP_TFVARS_FILE:-}
+
+EXTRA_REPO=${CAASP_EXTRA_REPO:-}
+
+# the environment file
+ENVIRONMENT=$DIR/environment.json
+
+USAGE=$(cat <<USAGE
+Usage:
+
+  * Building a cluster
+
+    -b|--build                       Run the CaaSP Build Step
+    -m|--masters <INT>               Number of masters to build (Default: CAASP_NUM_MASTERS=$MASTERS)
+    -w|--workers <INT>               Number of workers to build (Default: CAASP_NUM_WORKERS=$WORKERS)
+    -n|--network <STR>               Neutron network for internal communications (Default: CAASP_NETWORK:$NETWORK)
+    -i|--image <STR>                 Image to use (Default: CAASP_IMAGE=$IMAGE)
+
+  * Destroying a cluster
+
+    -d|--destroy                     Run the CaaSP KVM Destroy Step
+
+  * Common options
+
+    -p|--parallelism                 Set terraform parallelism (Default: CAASP_PARALLELISM)
+
+  * Advanced Options
+
+    --openrc <STR>                   openRC file to source
+    --name-prefix <STR>              Name prefix for the terraform resources
+    --plan                           Run the CaaSP KVM Plan Step
+    --tfvars-file <STR>              Path to a specific .tfvars file to use (Default: .)
+
+  * Examples:
+
+  Build a 1 master, 2 worker cluster
+
+  $0 --build -m 1 -w 2
+
+  Build a 1 master, 2 worker cluster using the latest CaaSP image
+
+  $0 --build -m 1 -w 2 --image CaaSP-devel-4.0-Build123
+
+  Destroy a cluster
+
+  $0 --destroy
+
+  Note: If the image is not present on the OpenStack cloud, then the script will upload it for you.
+
+USAGE
+)
+
+# Utility methods
+log()        { (>&2 echo ">>> [caasp-openstack-terraform] $@") ; }
+warn()       { log "WARNING: $@" ; }
+error()      { log "ERROR: $@" ; exit 1 ; }
+check_file() { if [ ! -f $1 ]; then error "File $1 doesn't exist!"; fi }
+usage()      { echo "$USAGE" ; exit 0 ; }
+
+# parse options
+while [[ $# > 0 ]] ; do
+  case $1 in
+    -b|--build)
+      ACTION=1
+      RUN_BUILD=1
+      ;;
+    -m|--masters)
+      MASTERS="$2"
+      shift
+      ;;
+    -n|--network)
+      NETWORK="$2"
+      shift
+      ;;
+    -w|--workers)
+      WORKERS="$2"
+      shift
+      ;;
+    -i|--image)
+      IMAGE="$2"
+      shift
+      ;;
+    -p|--parallelism)
+      PARALLELISM="$2"
+      shift
+      ;;
+    -d|--destroy)
+      ACTION=1
+      RUN_DESTROY=1
+      ;;
+    -u|--update-deployment)
+      ACTION=1
+      RUN_UPDATE_DEPLOYMENT=1
+      ;;
+    --openrc)
+      OPENRC_FILE="$2"
+      shift
+      ;;
+    --name-prefix)
+      CAASP_NAME_PREFIX="$2"
+      shift
+      ;;
+    --plan)
+      ACTION=1
+      RUN_PLAN=1
+      ;;
+    --tfvars-file)
+      TFVARS_FILE="$2"
+      shift
+      ;;
+    --extra-repo)
+      EXTRA_REPO="$2"
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      log "Invalid option: $1"
+      usage
+      ;;
+  esac
+  shift
+done
+
+################################################################
+
+TF_ARGS="-parallelism=$PARALLELISM \
+         -var internal_net=$NETWORK \
+         -var masters=$MASTERS \
+         -var workers=$WORKERS"
+
+if [ ! -z "${TFVARS_FILE}" ] ; then
+    TF_ARGS="-var-file=$TFVARS_FILE \
+        ${TF_ARGS}"
+fi
+
+if [ -n "$CAASP_NAME_PREFIX" ] ; then
+    TF_ARGS="$TF_ARGS -var stack_name=$CAASP_NAME_PREFIX"
+    log "Using name prefix for terraform: $CAASP_NAME_PREFIX"
+fi
+
+if [[ ${OPENRC_FILE:-x} != x ]] && [[ -e ${OPENRC_FILE} ]]; then
+    source ${OPENRC_FILE}
+else
+    if [[ ${OS_AUTH_URL:-x} == x ]]; then
+            error "OS_AUTH_URL is not set! Did you forget to source your openrc file?"
+    fi
+fi
+
+check_image() {
+    local image=${1}
+
+    log "Preparing image for ${image}"
+
+    download_image() {
+        local image=${image/channel:\/\//}
+        if ! openstack -q image list --property caasp-channel="${image}" 2>/dev/null; then
+            log "No image was found for channel=${CHANNEL}. A new one will be uploaded..."
+            $DIR../misc/tools/download-image --type openstack channel://${image}
+            $DIR../misc/tools/upload-image-openstack.sh false ${image}
+        fi
+        IMAGE=$(openstack image list -c Name -f value --property caasp-channel="${image}")
+        log "Final image was set to ${IMAGE}"
+    }
+
+    if [[ -n ${image} ]]; then
+        if ! openstack -q image list -c Name -f value --name "${image} 2>/dev/null"; then
+            log "No image named '${image}' was found on glance. Checking properties instead..."
+            download_image
+        fi
+    fi
+
+    TF_ARGS="$TF_ARGS -var image_name=$IMAGE"
+}
+
+build() {
+    log "CaaS Platform Building"
+    check_image ${IMAGE}
+
+    update_deployment
+
+    log "Waiting for Velum to start - this may take a while"
+    PYTHONUNBUFFERED=1 "$DIR/../misc-tools/wait-for-velum" --timeout 30 https://$(jq -r '.dashboardExternalHost' "$ENVIRONMENT")
+
+    log "CaaS Platform Ready for bootstrap"
+}
+
+plan() {
+    log "Planning terraform configuration"
+    terraform plan $TF_ARGS
+}
+
+update_deployment() {
+    log "Applying terraform configuration"
+    terraform init && terraform apply -auto-approve $TF_ARGS
+
+    ./tools/generate-environment
+    $DIR/../misc-tools/generate-ssh-config $ENVIRONMENT
+}
+
+destroy() {
+    log "Destroying terraform configuration"
+    terraform init && \
+        terraform destroy -auto-approve $TF_ARGS && \
+    rm -f "$ENVIRONMENT"
+}
+
+[ -n "$ACTION" ] || usage
+[ -n "$RUN_PLAN" ] && plan
+[ -n "$RUN_BUILD" ] && build
+[ -n "$RUN_UPDATE_DEPLOYMENT" ] && update_deployment
+[ -n "$RUN_DESTROY" ] && destroy
+
+exit 0

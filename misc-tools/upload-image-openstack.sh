@@ -10,7 +10,7 @@ IMAGE_BUILD=$(echo $IMAGE_FILENAME | sed -n 's/.*\(Build.*\).qcow2/\1/p')
 IMAGE_VERSION=$(echo $IMAGE_FILENAME | sed -n 's/.*CaaS-Platform-\(.*\)-\(for\|CaaSP\).*-OpenStack-Cloud.*/\1/p')
 IMAGE_NAME="CaaSP-${CHANNEL}-${IMAGE_VERSION}-${IMAGE_BUILD}"
 
-source $OPENRC
+[[ -e $OPENRC ]] && source $OPENRC
 echo "[+] Checking if we already have this image: $IMAGE_NAME"
 
 if [[ $(openstack image list -c ID -f value --property caasp-version="${IMAGE_VERSION}" --property caasp-channel="${CHANNEL}" --property caasp-build="${IMAGE_BUILD}") == "" ]]; then

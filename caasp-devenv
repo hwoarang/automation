@@ -34,9 +34,12 @@ VANILLA=${CAASP_VANILLA:-}
 DISABLE_MELTDOWN_SPECTRE=${CAASP_DISABLE_MELTDOWN_SPECTRE:-}
 PROXY=${CAASP_HTTP_PROXY:-}
 LOCATION=${CAASP_LOCATION:-}
+OPENRC=${OPENRC:-}
 PARALLELISM=${CAASP_PARALLELISM:-1}
 ENABLE_TILLER=${CAASP_ENABLE_TILLER:-false}
 EXTRA_REPO=${CAASP_EXTRA_REPO:-}
+PLATFORM="${CAASP_PLATFORM:-caasp-kvm}"
+declare -r PLATFORMS=(caasp-kvm caasp-openstack-terraform)
 
 EARLY_DIST_PACKAGES="lsb-release"
 DIST_PACKAGES="jq \
@@ -70,16 +73,17 @@ Usage:
 
   * Setup your workstation
 
-    --setup                     Install Dev Env Dependencies
+    --setup                          Install Dev Env Dependencies
 
   * Building a cluster
 
     -b|--build                       Run the CaaSP KVM Build Step
-    -m|--masters <INT>               Number of masters to build (Default: CAASP_NUM_MASTERS)
-    -w|--workers <INT>               Number of workers to build (Default: CAASP_NUM_WORKERS)
-    -u|--update-deployment           Update Terraform deployment (Default: false)
     -d|--destroy                     Run the CaaSP KVM Destroy Step
     -i|--image                       Image to use (Default: CAASP_IMAGE)
+    -m|--masters <INT>               Number of masters to build (Default: CAASP_NUM_MASTERS)
+    -u|--update-deployment           Update Terraform deployment (Default: false)
+    -w|--workers <INT>               Number of workers to build (Default: CAASP_NUM_WORKERS)
+    --platform                       Platform to deploy CaaSP on (Default: CAASP_PLATTFORM)
     --vanilla                        Do not inject devenv code, use vanilla caasp (Default: false)
     --disable-meltdown-spectre-fixes Disable meltdown and spectre fixes (Default: false)
     --enable-tiller                  Enable Helm Tiller
@@ -89,22 +93,23 @@ Usage:
     Velum Username: test@test.com
     Velum Password: password
 
-    -B|--bootstrap              Bootstrap CaaSP cluster
+    -B|--bootstrap                   Bootstrap CaaSP cluster
 
   * Testing a cluster
 
-    -T|--testinfra              Run testinfra tests
+    -T|--testinfra                   Run testinfra tests
 
   * Common options
 
-    -p|--parallelism            Set terraform parallelism (Default: CAASP_PARALLELISM)
-    -P|--proxy                  Set HTTP Proxy (Default: CAASP_HTTP_PROXY)
-    -L|--location               Set location used for downloads (Default: CAASP_LOCATION or 'default')
+    --openrc                         openRC file (only for OpenStack platforms)
+    -p|--parallelism                 Set terraform parallelism (Default: CAASP_PARALLELISM)
+    -P|--proxy                       Set HTTP Proxy (Default: CAASP_HTTP_PROXY)
+    -L|--location                    Set location used for downloads (Default: CAASP_LOCATION or 'default')
 
   * Advanced Options
 
-    --plan                      Run the CaaSP KVM Plan Step
-    --extra-repo <STR>          URL of a custom repository on the master(s)/worker(s) (Default: CAASP_EXTRA_REPO)
+    --plan                           Run the CaaSP KVM Plan Step
+    --extra-repo <STR>               URL of a custom repository on the master(s)/worker(s) (Default: CAASP_EXTRA_REPO)
 
   * Examples:
 
@@ -148,99 +153,138 @@ clone_needed_github_repos() {
         fi
   done
   popd
-} 
+}
 
+in_array() {
+    local x item=${1} _found=1
+    shift
+    declare -a local p=(${@})
+    for x in ${p[@]}; do
+        if [[ ${item} == ${x} ]]; then
+            _found=0
+            break
+        fi
+    done
+    return $_found
+}
+
+OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,openrc,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
+eval set -- "$OPTS"
 
 # parse options
-while [[ $# > 0 ]] ; do
+while true; do
   case $1 in
-    --setup)
+    -B|--bootstrap)
       ACTION=1
-      RUN_SETUP=1
+      RUN_BOOTSTRAP=1
+      shift
       ;;
     -b|--build)
       ACTION=1
       RUN_BUILD=1
-      ;;
-    -m|--masters)
-      MASTERS="$2"
-      shift
-      ;;
-    -w|--workers)
-      WORKERS="$2"
       shift
       ;;
     -d|--destroy)
       ACTION=1
       RUN_DESTROY=1
-      ;;
-    -u|--update-deployment)
-      ACTION=1
-      RUN_UPDATE_DEPLOYMENT=1
-      ;;
-    -i|--image)
-      IMAGE="$2"
-      shift
-      ;;
-    --vanilla)
-      VANILLA="true"
-      ;;
-    --disable-meltdown-spectre-fixes)
-      DISABLE_MELTDOWN_SPECTRE="true"
-      ;;
-    --enable-tiller)
-      ENABLE_TILLER=true
-      ;;
-    -B|--bootstrap)
-      ACTION=1
-      RUN_BOOTSTRAP=1
-      ;;
-    -T|--testinfra)
-      ACTION=1
-      RUN_TESTINFRA=1
-      ;;
-    -p|--parallelism)
-      PARALLELISM="$2"
-      shift
-      ;;
-    -P|--proxy)
-      PROXY="$2"
-      shift
-      ;;
-    -L|--location)
-      LOCATION="$2"
-      shift
-      ;;
-    --plan)
-      ACTION=1
-      RUN_PLAN=1
-      ;;
-    --extra-repo)
-      EXTRA_REPO="$2"
       shift
       ;;
     -h|--help)
       usage
       ;;
+    -i|--image)
+      IMAGE="$2"
+      shift 2
+      ;;
+    -L|--location)
+      LOCATION="$2"
+      shift 2
+      ;;
+    -m|--masters)
+      MASTERS="$2"
+      shift 2
+      ;;
+    -P|--proxy)
+      PROXY="$2"
+      shift 2
+      ;;
+    -p|--parallelism)
+      PARALLELISM="$2"
+      shift 2
+      ;;
+    -T|--testinfra)
+      ACTION=1
+      RUN_TESTINFRA=1
+      shift
+      ;;
+    -u|--update-deployment)
+      ACTION=1
+      RUN_UPDATE_DEPLOYMENT=1
+      shift
+      ;;
+    -w|--workers)
+      WORKERS="$2"
+      shift 2
+      ;;
+    --disable-meltdown-spectre-fixes)
+      DISABLE_MELTDOWN_SPECTRE="true"
+      shift
+      ;;
+    --enable-tiller)
+      ENABLE_TILLER=true
+      shift
+      ;;
+    --extra-repo)
+      EXTRA_REPO="$2"
+      shift 2
+      ;;
+    --openrc)
+      OPENRC="$2"
+      shift 2
+      ;;
+    --plan)
+      ACTION=1
+      RUN_PLAN=1
+      shift
+      ;;
+    --platform)
+      ACTION=1
+      PLATFORM=$2
+      # Check that platform is actually supported
+      ! in_array ${PLATFORM} "${PLATFORMS[@]}" && echo "Unsupported platform: $PLATFORM" && exit 1
+      shift 2
+      ;;
+    --setup)
+      ACTION=1
+      RUN_SETUP=1
+      shift
+      ;;
+    --vanilla)
+      VANILLA="true"
+      ;;
+    --)
+      shift
+      break
+      ;;
     *)
-      log "Invalid option: $1"
-      usage
+      echo "Internal error!"
+      exit 1
       ;;
   esac
-  shift
 done
 
 ##############################################################
 
-CAASP_KVM_ARGS="-m $MASTERS -w $WORKERS --image $IMAGE"
-[ -n "$PARALLELISM" ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --parallelism $PARALLELISM"
-[ -n "$PROXY"       ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --proxy $PROXY"
-[ -n "$LOCATION"    ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --location $LOCATION"
-[ -n "$VANILLA"     ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --vanilla"
-[ -n "$DISABLE_MELTDOWN_SPECTRE" ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --disable-meltdown-spectre-fixes"
-[ -n "$EXTRA_REPO"  ] && CAASP_KVM_ARGS="$CAASP_KVM_ARGS --extra-repo $EXTRA_REPO"
+CAASP_PLATFORM_ARGS="-m $MASTERS -w $WORKERS --image $IMAGE"
+[ -n "$PARALLELISM" ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --parallelism $PARALLELISM"
+[ -n "$PROXY"       ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --proxy $PROXY"
+[ -n "$LOCATION"    ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --location $LOCATION"
+[ -n "$VANILLA"     ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --vanilla"
+[ -n "$DISABLE_MELTDOWN_SPECTRE" ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --disable-meltdown-spectre-fixes"
+[ -n "$EXTRA_REPO"  ] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --extra-repo $EXTRA_REPO"
+[ -n "$OPENRC" ] && [[ $PLATFORM =~ openstack ]] && CAASP_PLATFORM_ARGS="$CAASP_PLATFORM_ARGS --openrc $OPENRC"
 
-export ENVIRONMENT="$DIR/caasp-kvm/environment.json"
+export ENVIRONMENT="$DIR/$PLATFORM/environment.json"
 
 # Core methods
 setup() {
@@ -285,18 +329,18 @@ setup() {
 }
 
 plan() {
-  log "Planning CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --plan $CAASP_KVM_ARGS )
+  log "Planning CaaSP Environment"
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --plan $CAASP_PLATFORM_ARGS )
 }
 
 build() {
-  log "Starting CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --build $CAASP_KVM_ARGS )
+  log "Starting CaaSP Environment"
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --build $CAASP_PLATFORM_ARGS )
 }
 
 update_deployment() {
-  log "Updating CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --update-deployment $CAASP_KVM_ARGS )
+  log "Updating CaaSP Environment"
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --update-deployment $CAASP_PLATFORM_ARGS )
 }
 
 bootstrap() {
@@ -319,7 +363,7 @@ testinfra() {
 
 destroy() {
   log "Destroy CaaSP KVM Environment"
-  (cd "$DIR/caasp-kvm" && ./caasp-kvm --destroy $CAASP_KVM_ARGS)
+  (cd "$DIR/$PLATFORM" && ./$PLATFORM --destroy $CAASP_PLATFORM_ARGS)
 }
 
 [ -n "$ACTION" ] || usage

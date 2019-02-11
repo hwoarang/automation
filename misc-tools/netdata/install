@@ -24,7 +24,7 @@ def main():
     sshkey = env['sshKey']
     target = [m for m in env["minions"] if m["role"] == args.target]
     for t in target:
-        ipaddr = t["addresses"]["privateIpv4"]
+        ipaddr = t["addresses"]["publicIpv4"]
         basecmd = "/usr/bin/ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i {} {}@{} ".format(sshkey, sshuser, ipaddr)
         cmd = basecmd + "curl -Ss https://my-netdata.io/kickstart-static64.sh -o netdata_installer.sh"
         runcmd(cmd)

@@ -1,0 +1,45 @@
+env.BRANCH_NAME = "openstack-terraform"
+def kubicLib = library("kubic-jenkins-library@${env.BRANCH_NAME}").com.suse.kubic
+env.BRANCH_NAME = "master"
+// This pipeline runs daily tests on VMware
+
+// Configure the build properties
+// Configure the build properties
+    buildDiscarder(logRotator(numToKeepStr: '31', daysToKeepStr: '31')),
+    disableConcurrentBuilds(),
+    pipelineTriggers([cron('H H(3-5) * * *')]),
+    parameters([
+        string(name: 'MASTER_COUNT', defaultValue: '1', description: 'Number of Master Nodes'),
+        string(name: 'WORKER_COUNT', defaultValue: '2', description: 'Number of Worker Nodes'),
+        booleanParam(name: 'ENVIRONMENT_DESTROY', defaultValue: true, description: 'Destroy env once done?')
+    ])
+])
+
+def openstackTypeOptions = kubicLib.OpenstackTypeOptions.new();
+
+coreKubicProjectPeriodic(
+    environmentType: 'openstack',
+    environmentTypeOptions: openstackTypeOptions,
+    environmentDestroy: env.ENVIRONMENT_DESTROY.toBoolean(),
+    masterCount: env.MASTER_COUNT.toInteger(),
+    workerCount: env.WORKER_COUNT.toInteger(),
+) {
+    // empty preBootstrapBody
+} {
+    // Run through the upgrade orchestration
+    upgradeEnvironmentStage1(
+        environment: environment,
+        fakeUpdatesAvailable: true
+    )
+
+    upgradeEnvironmentStage2(
+        environment: environment
+    )
+
+    // Run the Core Project Tests again
+    coreKubicProjectNodeTests(
+        environment: environment
+    )
+
+    return environment
+}
