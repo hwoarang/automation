@@ -1,10 +1,7 @@
-env.BRANCH_NAME = "openstack-terraform"
 def kubicLib = library("kubic-jenkins-library@${env.BRANCH_NAME}").com.suse.kubic
-env.BRANCH_NAME = "master"
-// This pipeline runs daily tests on VMware
 
 // Configure the build properties
-// Configure the build properties
+properties([
     buildDiscarder(logRotator(numToKeepStr: '31', daysToKeepStr: '31')),
     disableConcurrentBuilds(),
     pipelineTriggers([cron('H H(3-5) * * *')]),
