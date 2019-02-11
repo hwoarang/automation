@@ -276,7 +276,7 @@ resource "openstack_compute_floatingip_associate_v2" "admin_ext_ip" {
 
 resource "openstack_compute_instance_v2" "master" {
   count      = "${var.masters}"
-  name       = "caasp-master-${var.stack_name}${count.index}"
+  name       = "caasp-master-${var.stack_name}-${count.index}"
   image_name = "${var.image_name}"
 
   flavor_name = "${var.master_size}"
@@ -307,7 +307,7 @@ resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
 
 resource "openstack_compute_instance_v2" "worker" {
   count      = "${var.workers}"
-  name       = "caasp-worker-${var.stack_name}${count.index}"
+  name       = "caasp-worker-${var.stack_name}-${count.index}"
   image_name = "${var.image_name}"
 
   flavor_name = "${var.worker_size}"
