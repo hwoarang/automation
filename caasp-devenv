@@ -168,7 +168,7 @@ in_array() {
     return $_found
 }
 
-OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,parallelism:,openrc:,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
+OPTS=$(getopt -o Bbdhi:L:m:P:p:T:uw: --long build,bootstrap,destroy,disable-meltdown-spectre-fixes,enable-tiller,extra-repo:,help,location,image:,parallelism:,openrc:,plan,platform:,proxy:,setup,testinfra:,vanilla -n "$0" -- "$@")
 eval set -- "$OPTS"
 
 # parse options
@@ -261,6 +261,7 @@ while true; do
       ;;
     --vanilla)
       VANILLA="true"
+      shift
       ;;
     --)
       shift
