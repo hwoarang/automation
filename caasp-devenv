@@ -374,3 +374,5 @@ destroy() {
 [ -n "$RUN_BOOTSTRAP" ] && bootstrap
 [ -n "$RUN_TESTINFRA" ] && testinfra
 [ -n "$RUN_DESTROY" ] && destroy
+
+exit 0
