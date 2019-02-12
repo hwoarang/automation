@@ -261,6 +261,7 @@ while true; do
       ;;
     --vanilla)
       VANILLA="true"
+      shift
       ;;
     --)
       shift
