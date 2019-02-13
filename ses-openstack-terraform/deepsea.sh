@@ -1,5 +1,6 @@
 #!/bin/bash
 
+sleep 1m
 zypper -n in -l -y ntp 
 
 cat <<EOF > /etc/ntp.conf

@@ -12,10 +12,10 @@ variable "master_size" {}
 variable "mons" {}
 variable "worker_size" {}
 variable "osds" {}
-variable "regcode" {}
-variable "ses_base" {}
-variable "ses_update" {}
+variable "regcodeSLES" {}
+variable "regcodeSES" {}
 variable "identifier" {}
+variable "volumeSize" {}
 
 provider "openstack" {
   domain_name = "${var.domain_name}"
@@ -30,9 +30,8 @@ data "template_file" "admin" {
   template = "${file("admin.tpl")}"
 
   vars {
-    regcode    = "${var.regcode}"
-    ses_base   = "${var.ses_base}"
-    ses_update = "${var.ses_update}"
+    regcodeSLES    = "${var.regcodeSLES}"
+    regcodeSES    = "${var.regcodeSES}"
   }
 }
 
@@ -40,9 +39,8 @@ data "template_file" "mon" {
   template = "${file("mon.tpl")}"
 
   vars {
-    regcode    = "${var.regcode}"
-    ses_base   = "${var.ses_base}"
-    ses_update = "${var.ses_update}"
+    regcodeSLES    = "${var.regcodeSLES}"
+    regcodeSES    = "${var.regcodeSES}"
     saltmaster = "${openstack_compute_instance_v2.admin.name}"
   }
 }
@@ -51,9 +49,8 @@ data "template_file" "osd" {
   template = "${file("osd.tpl")}"
 
   vars {
-    regcode    = "${var.regcode}"
-    ses_base   = "${var.ses_base}"
-    ses_update = "${var.ses_update}"
+    regcodeSLES    = "${var.regcodeSLES}"
+    regcodeSES    = "${var.regcodeSES}"
     saltmaster = "${openstack_compute_instance_v2.admin.name}"
   }
 }
@@ -365,7 +362,7 @@ resource "openstack_compute_floatingip_associate_v2" "mon_ext_ip" {
 
 resource "openstack_blockstorage_volume_v2" "osd-blk" {
   count = "${var.osds}"
-  size  = 40
+  size  = "${var.volumeSize}"
   name  = "osd-blk${count.index}"
 }
 

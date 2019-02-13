@@ -1,5 +1,5 @@
 #!/bin/bash
 
-SUSEConnect -r ${regcode}
-zypper --non-interactive --quiet --gpg-auto-import-keys ar -f ${ses_base} ses_base
-zypper --non-interactive --quiet --gpg-auto-import-keys ar -f ${ses_update} ses_update
+SUSEConnect -r ${regcodeSLES}
+sleep 1
+SUSEConnect -p ses/5/x86_64 -r ${regcodeSES}
