@@ -15,6 +15,7 @@ variable "osds" {}
 variable "regcodeSLES" {}
 variable "regcodeSES" {}
 variable "identifier" {}
+variable "volumeSize" {}
 
 provider "openstack" {
   domain_name = "${var.domain_name}"
@@ -361,7 +362,7 @@ resource "openstack_compute_floatingip_associate_v2" "mon_ext_ip" {
 
 resource "openstack_blockstorage_volume_v2" "osd-blk" {
   count = "${var.osds}"
-  size  = 40
+  size  = "${var.volumeSize}"
   name  = "osd-blk${count.index}"
 }
 
