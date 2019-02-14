@@ -183,7 +183,7 @@ check_image() {
             $DIR../misc/tools/download-image --type openstack channel://${image}
             $DIR../misc/tools/upload-image-openstack.sh false ${image}
         fi
-        IMAGE=$(openstack image list -c Name -f value --property caasp-channel="${image}")
+        IMAGE=$(openstack image list -c Name -f value --property caasp-channel="${image}" --sort name:desc | head -n 1)
         log "Final image was set to ${IMAGE}"
     }
 
