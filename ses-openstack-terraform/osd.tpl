@@ -1,9 +1,7 @@
 #!/bin/bash
 
 SUSEConnect -r ${regcodeSLES}
-sleep 1
 SUSEConnect -p ses/5/x86_64 -r ${regcodeSES}
-sleep 1 
 
 zypper -n in -l -y ntp 
 

@@ -1,6 +1,10 @@
 #!/bin/bash
 
-sleep 1m
+while [ "$(zypper refresh > /dev/null 2>&1; echo $?)" -ne 0 ]; do 
+    printf "wait 5 seconds for admin to be registered to scc\n"
+    sleep 5
+done
+
 zypper -n in -l -y ntp 
 
 cat <<EOF > /etc/ntp.conf
