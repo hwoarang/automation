@@ -9,3 +9,4 @@ osds = 5
 regcodeSLES = "sles"
 regcodeSES = "ses"
 identifier = "test"
+volumeSize = 1
