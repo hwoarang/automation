@@ -22,7 +22,7 @@ if [[ $(openstack image list -c ID -f value --property caasp-version="${IMAGE_VE
         echo "[+] Deleting previous SUSE CaaSP qcow2 VM image for {version=$IMAGE_VERSION, channel=$CHANNEL}"
         for image in $(openstack image list -c Name -f value --property caasp-version="${IMAGE_VERSION}" --property caasp-channel="${CHANNEL}"); do
             [[ $image == $IMAGE_NAME ]] && continue
-            openstack image delete $images
+            openstack image delete $image
         done
     else
         echo "Failed to upload new image ${IMAGE_NAME}"
